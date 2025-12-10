@@ -426,3 +426,5 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+lib/SFML-3.0.2/
