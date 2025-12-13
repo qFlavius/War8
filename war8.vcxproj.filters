@@ -19,18 +19,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Themes\themes.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Themes\themes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MainMenu\MainMenu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="MainMenu\MainMenu.hpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Themes\themes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globalVar.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

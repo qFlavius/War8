@@ -135,7 +135,7 @@
     <ClCompile Include="Themes\themes.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MainMenu\MainMenu.h" />
+    <ClInclude Include="globalVar.hpp" />
     <ClInclude Include="MainMenu\MainMenu.hpp" />
     <ClInclude Include="Themes\themes.h" />
   </ItemGroup>

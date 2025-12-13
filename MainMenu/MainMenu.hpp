@@ -5,32 +5,36 @@
 #include <iostream>
 #include <optional> // Pentru std::optional
 #include "../Themes/themes.h"
+#include "../globalVar.hpp"
 
+//inline - copiaza functia si o pune in main -> Timp de executie mai mic
 inline void CenterText(sf::Text &text, const sf::RectangleShape &rect) {
     sf::FloatRect textBounds = text.getLocalBounds();
     
+    // Pune originea in mijlocul textului, in loc de stanga sus(default)
     text.setOrigin({
         textBounds.position.x + textBounds.size.x / 2.0f,
         textBounds.position.y + textBounds.size.y / 2.0f
     });
-
+    //Seteaza originea in mijlocul dreptunghiului
     text.setPosition({
         rect.getPosition().x + rect.getSize().x / 2.0f,
         rect.getPosition().y + rect.getSize().y / 2.0f
     });
 }
 
-struct GameMenu {
+struct GameMenu { // struct - alternativa pentru class
     sf::Font font;
     std::vector<sf::RectangleShape> buttons;
     std::vector<sf::Text> texts;
     std::vector<std::string> labels;
 
     //Cursors (se foloseste std::optioinal pentru ca createFromSystem ar putea esua)
+    //variabilele pot fi goale sau nu. Asa ca se numesc "optionale"
     std::optional<sf::Cursor> cursorHand;
     std::optional<sf::Cursor> cursorArrow;
 
-    GameMenu() {
+    GameMenu() { // se apeleaza automat - numele trebuie sa fie identic ca cel al structurii / clasei
         if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
             std::cerr << "Error loading font" << std::endl;
         }
@@ -91,8 +95,48 @@ struct GameMenu {
              window.setMouseCursor(*cursorArrow);
         }
 
-        //  Desenam orice
+        //  Desenam tot
         for (const auto &rect : buttons) window.draw(rect);
         for (const auto &txt : texts) window.draw(txt);
+    }
+    void handleInput(const sf::Event& event, sf::RenderWindow& window) {
+        // 1. Incercam sa obtinem detaliile evenimentului de tip MouseButtonPressed
+        // Daca evenimentul NU e de acest tip, pointerul va fi null si if-ul nu se executa.
+        if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mouseEvent->button == sf::Mouse::Button::Left) {
+
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f mousePosF = static_cast<sf::Vector2f>(mousePos);
+
+                for (size_t i = 0; i < buttons.size(); ++i) {
+                    if (buttons[i].getGlobalBounds().contains(mousePosF)) {
+                        if (labels[i] == "Play") {
+                            interfata = 2;
+                        }
+                        else if (labels[i] == "Learn") {
+                            interfata = 3;
+                        }
+                        else if (labels[i] == "Stats") {
+                            interfata = 4;
+                        }
+                        else if (labels[i] == "Leadeerboard") {
+                            interfata = 5;
+                        }
+                        else if (labels[i] == "Profiles") {
+                            interfata = 6;
+                        }
+                        else if (labels[i] == "Themes") {
+                            interfata = 7;
+                        }
+                        else if (labels[i] == "Settings") {
+                            interfata = 8;
+                        }
+                        else if (labels[i] == "Exit") {
+                            window.close();
+                        }
+                    }
+                }
+            }
+        }
     }
 };
