@@ -1,0 +1,4 @@
+Background: E7F2EF
+Buttons: D7EAE5
+Hover-Buttons: AFD5CB
+Text: black
