@@ -133,14 +133,15 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PlayScreen\PlayScreen.cpp" />
-    <ClCompile Include="Themes\themes.cpp" />
+    <ClCompile Include="Themes\themesRead.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="globalVar.hpp" />
     <ClInclude Include="MainMenu\MainMenu.hpp" />
     <ClInclude Include="PlayScreen.hpp" />
     <ClInclude Include="PlayScreen\PlayScreen.hpp" />
-    <ClInclude Include="Themes\themes.h" />
+    <ClInclude Include="Themes\Themes.hpp" />
+    <ClInclude Include="Themes\themesRead.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 /*
 #include <SFML/Graphics.hpp>
-#include "Themes/themes.h"
+#include "Themes/themesRead.h"
 #include "MainMenu/MainMenu.hpp"
 #include "globalVar.hpp"
 
@@ -42,7 +42,7 @@ int main()
 
 #include <SFML/Graphics.hpp>
 
-#include "Themes/themes.h"
+#include "Themes/themesRead.h"
 #include "MainMenu/MainMenu.hpp"
 #include "PlayScreen/PlayScreen.hpp"
 #include "globalVar.hpp"

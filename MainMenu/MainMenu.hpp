@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <optional> 
-#include "../Themes/themes.h"
+#include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 
 //inline - copiaza functia si o pune in main -> Timp de executie mai mic
@@ -40,7 +40,7 @@ struct GameMenu { // struct - alternativa pentru class
         if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
             std::cerr << "Error loading font" << std::endl;
         }
-        if (!TablaTexture.loadFromFile("MainMenu/Tabla.png")) {
+        if (!TablaTexture.loadFromFile("Themes/Default/Tabla.png")) {
             std::cerr << "Error loading Image" << std::endl;
         }
         else {

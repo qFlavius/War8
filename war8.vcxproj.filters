@@ -21,7 +21,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Themes\themes.cpp">
+    <ClCompile Include="Themes\themesRead.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="PlayScreen\PlayScreen.cpp">
@@ -32,7 +32,7 @@
     <ClInclude Include="MainMenu\MainMenu.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Themes\themes.h">
+    <ClInclude Include="Themes\themesRead.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="globalVar.hpp">
@@ -43,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="PlayScreen\PlayScreen.hpp">
       <Filter>PlayScreen</Filter>
+    </ClInclude>
+    <ClInclude Include="Themes\Themes.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
