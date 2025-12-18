@@ -1,0 +1,10 @@
+Background: 000000
+Buttons: 515151
+Hover-Buttons: #666666
+Text: white
+BoardSquare1: D9D9D9
+BoardSquare2: 8C8C8C
+Peace1: FFFFFF
+PeaceOutline1: E0E0E0
+Peace2: 282828
+PeaceOutline2: 000000

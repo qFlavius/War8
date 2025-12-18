@@ -79,8 +79,8 @@ struct GameMenu { // struct - alternativa pentru class
 
         for (size_t i = 0; i < labels.size(); ++i) {
             sf::RectangleShape rect(sf::Vector2f(btnWidth, btnHeight));
-            rect.setFillColor(color_buttons);
-            rect.setPosition({ 0.f, btnHeight * static_cast<float>(i) });
+            rect.setFillColor(themes[0].color_buttons);
+            rect.setPosition({ 0.f, btnHeight * (static_cast<float>(i)) });
             buttons.push_back(rect);
 
             if (!labels[i].empty()) {
@@ -106,11 +106,11 @@ struct GameMenu { // struct - alternativa pentru class
             if (labels[i] == "") continue;
 
             if (buttons[i].getGlobalBounds().contains(mousePosF)) {
-                buttons[i].setFillColor(color_HoverButton);
+                buttons[i].setFillColor(themes[0].color_HoverButton);
                 isHovering = true;
             }
             else {
-                buttons[i].setFillColor(color_buttons);
+                buttons[i].setFillColor(themes[0].color_buttons);
             }
         }
 

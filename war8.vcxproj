@@ -140,6 +140,7 @@
     <ClInclude Include="MainMenu\MainMenu.hpp" />
     <ClInclude Include="PlayScreen.hpp" />
     <ClInclude Include="PlayScreen\PlayScreen.hpp" />
+    <ClInclude Include="Profile\playerData.hpp" />
     <ClInclude Include="Themes\Themes.hpp" />
     <ClInclude Include="Themes\themesRead.h" />
   </ItemGroup>

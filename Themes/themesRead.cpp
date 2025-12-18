@@ -1,13 +1,12 @@
 #include "themesRead.h"
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <sstream> 
 #include <cstdint> // Pentru std::uint8_t
 
-sf::Color color_buttons;
-sf::Color color_bg;
-sf::Color color_HoverButton;
-sf::Color color_text;
+std::string themeAdress[5];
+Theme themes[5];
 
 // Convert hex string "#RRGGBB" to sf::Color
 sf::Color HexToColor(std::string hex) {
@@ -29,26 +28,50 @@ sf::Color HexToColor(std::string hex) {
 }
 
 void Themes() {
-    std::ifstream fin("Themes/Default/default.txt");
-    if (!fin.is_open()) return;
-
-    std::string key, value;
-    
-    while (fin >> key >> value) {
-        for (auto &c : key) c = tolower(c);
-
-        if (key == "background:") {
-            color_bg = HexToColor(value);
-        }
-        else if (key == "buttons:") {
-            color_buttons = HexToColor(value);
-        }
-        else if (key == "hover-buttons:") {
-            color_HoverButton = HexToColor(value);
-        }
-        else if (key == "text:") {
-            color_text = HexToColor(value);
-        }
+    if (themeAdress[0].empty()) {
+        themeAdress[0] = "Themes/Default/Default.txt";
     }
-    fin.close();
+    std::string key, value;
+    themeAdress[1] = "Themes/Default/Default.txt";
+    themeAdress[2] = "Themes/Default_Dark/defaultDark.txt";
+    themeAdress[3] = "Themes/B&W/B&W.txt";
+    themeAdress[4] = "Themes/Custom/custom.txt";
+    for (int i = 0; i <= 4; i++) {
+        std::ifstream fin(themeAdress[i]);
+        while (fin >> key >> value) {
+            for (auto& c : key) c = tolower(c);
+
+            if (key == "background:") {
+                themes[i].color_bg = HexToColor(value);
+            }
+            else if (key == "buttons:") {
+                themes[i].color_buttons = HexToColor(value);
+            }
+            else if (key == "hover-buttons:") {
+                themes[i].color_HoverButton = HexToColor(value);
+            }
+            else if (key == "text:") {
+                themes[i].color_text = HexToColor(value);
+            }
+            else if (key == "boardsquare1:") {
+                themes[i].color_BoardSquare1 = HexToColor(value);
+            }
+            else if (key == "boardsquare2:") {
+                themes[i].color_BoardSquare2 = HexToColor(value);
+            }
+            else if (key == "peace1:") {
+                themes[i].color_peace1 = HexToColor(value);
+            }
+            else if (key == "peaceoutline1:") {
+                themes[i].color_peaceOutline1 = HexToColor(value);
+            }
+            else if (key == "peace2:") {
+                themes[i].color_peace2 = HexToColor(value);
+            }
+            else if (key == "peaceoutline2:") {
+                themes[i].color_peaceOutline2 = HexToColor(value);
+            }
+        }
+        fin.close();
+    }
 }

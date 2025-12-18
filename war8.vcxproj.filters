@@ -47,5 +47,8 @@
     <ClInclude Include="Themes\Themes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Profile\playerData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

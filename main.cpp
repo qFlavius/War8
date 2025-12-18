@@ -43,27 +43,30 @@ int main()
 #include <SFML/Graphics.hpp>
 
 #include "Themes/themesRead.h"
+#include "Themes/Themes.hpp"
 #include "MainMenu/MainMenu.hpp"
 #include "PlayScreen/PlayScreen.hpp"
 #include "globalVar.hpp"
+#include "Profile/playerData.hpp"
+#include <iostream>
 
 // variabila globala folosita in tot proiectul
 int interfata = 1;
 
 int main()
 {
+    playerData();
     Themes(); // initializeaza culorile (color_bg, etc.)
-
     sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), "Razboi in 8");
     window.setFramerateLimit(60);
 
     GameMenu menu;
+    GameThemes themePage;
 
     // initializeaza modulul de joc (Play)
     Play_Init();
 
     int lastInterfata = interfata;
-
     while (window.isOpen()) {
 
         while (auto event = window.pollEvent()) {
@@ -86,13 +89,16 @@ int main()
         }
         lastInterfata = interfata;
 
-        window.clear(color_bg);
+        window.clear(themes[0].color_bg);
 
         if (interfata == 1) {
             menu.draw(window);
         }
         else if (interfata == 2) {
             Play_Draw(window);
+        }
+        else if (interfata == 7) {
+            themePage.draw(window);
         }
 
         window.display();
