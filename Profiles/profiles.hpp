@@ -3,13 +3,15 @@
 #include <optional> 
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
+#include "../SoundEffects/SoundEffects.hpp"
 
 struct ProfilesMenu {
+    AudioMenu audio;
+
 	sf::Font font;
 	sf::RectangleShape back;
 	sf::Text backTxt;
 
-	// Cursors 
 	std::optional<sf::Cursor> cursorHand;
 	std::optional<sf::Cursor> cursorArrow;
 
@@ -17,7 +19,6 @@ struct ProfilesMenu {
 		if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
 			std::cerr << "Error loading font" << std::endl;
 		}
-        // BACK BUTTON
         back.setSize(sf::Vector2f(543.f, 108.f));
         back.setPosition(sf::Vector2f(0, 1080));
         back.setOrigin({ 0, 108.f });
@@ -27,18 +28,14 @@ struct ProfilesMenu {
         backTxt.setString("Back");
         backTxt.setCharacterSize(35);
 
-        // 1. Centram Originea textului (Asta e corect ce ai facut)
         sf::FloatRect textRect = backTxt.getLocalBounds();
         backTxt.setOrigin({
             textRect.position.x + textRect.size.x / 2.0f,
             textRect.position.y + textRect.size.y / 2.0f
             });
 
-        // 2. Calculam Centrul Butonului folosind GlobalBounds (Nu getPosition)
         sf::FloatRect btnBounds = back.getGlobalBounds();
 
-        // Centrul X = stanga butonului + jumatate din latime
-        // Centrul Y = susul butonului + jumatate din inaltime
         backTxt.setPosition({
             btnBounds.position.x + btnBounds.size.x / 2.0f,
             btnBounds.position.y + btnBounds.size.y / 2.0f
@@ -54,6 +51,7 @@ struct ProfilesMenu {
                 sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
                 if (back.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     interfata = 1;
                 }
             }

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>                // snprintf
 #include <SFML/System/Angle.hpp> // sf::degrees (SFML 3)
+#include "../SoundEffects/SoundEffects.hpp"
 
 // ============================================================================
 //  PLAYSCREEN
@@ -21,6 +22,8 @@
 
 
 // ------------------------------ STARE JOC ------------------------------
+
+AudioMenu audio;
 
 // Tabla: 0 liber, 1 alb, 2 negru
 static std::uint8_t g_board[8][8];
@@ -924,6 +927,7 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     // ESC merge in orice faza: ies din play
     if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
         if (k->code == sf::Keyboard::Key::Escape) {
+            audio.playClick();
             g_hasSel = false;
             g_moveCount = 0;
             interfata = 1;
@@ -935,14 +939,17 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     if (g_phase == 0) {
         if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
             if (k->code == sf::Keyboard::Key::Tab) {
+                audio.playClick();
                 g_activeName = 1 - g_activeName;
                 return;
             }
             if (k->code == sf::Keyboard::Key::Backspace) {
+                audio.playClick();
                 backspaceName(g_activeName);
                 return;
             }
             if (k->code == sf::Keyboard::Key::Enter) {
+                audio.playClick();
                 // prima apasare ENTER -> trec la campul 2, a doua -> incep jocul
                 if (g_activeName == 0) g_activeName = 1;
                 else startGameFromNames();
@@ -957,6 +964,7 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
             if (u >= 32 && u <= 126) {
                 char ch = (char)u;
                 if (ch != '|' && ch != '\n' && ch != '\r' && ch != '\t') {
+                    audio.playKey();
                     appendCharToName(g_activeName, ch);
                 }
             }
@@ -970,11 +978,13 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     if (g_phase == 2) {
         if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
             if (k->code == sf::Keyboard::Key::R) {
+                audio.playClick();
                 resetMatchKeepNames();
                 g_phase = 1;
                 return;
             }
             if (k->code == sf::Keyboard::Key::Enter) {
+                audio.playClick();
                 resetAllToNameEntry();
                 return;
             }
@@ -991,6 +1001,7 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     }
 
     if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
+        audio.playClick();
         if (mb->button != sf::Mouse::Button::Left) return;
 
         updateLayout(w);

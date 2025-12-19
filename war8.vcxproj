@@ -145,6 +145,7 @@
     <ClInclude Include="Profiles\profiles.hpp" />
     <ClInclude Include="Profile\playerData.hpp" />
     <ClInclude Include="Settings\settings.hpp" />
+    <ClInclude Include="SoundEffects\SoundEffects.hpp" />
     <ClInclude Include="Stats\stats.hpp" />
     <ClInclude Include="Themes\Themes.hpp" />
     <ClInclude Include="Themes\themesRead.h" />

@@ -1,1 +1,1 @@
-theme: Themes/Default_Dark/defaultDark.txt
+theme: Themes/Default/Default.txt

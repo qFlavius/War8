@@ -89,5 +89,8 @@
     <ClInclude Include="LeaderBoard\leaderboard.hpp">
       <Filter>Header Files\LeaderBoard</Filter>
     </ClInclude>
+    <ClInclude Include="SoundEffects\SoundEffects.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

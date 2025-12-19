@@ -6,8 +6,11 @@
 #include <optional> 
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
+#include "../SoundEffects/SoundEffects.hpp"
 
 struct GameMenu { // struct - alternativa pentru class
+    AudioMenu audio;
+
     sf::Font font;
     std::vector<sf::RectangleShape> buttons;
     std::vector<sf::Text> texts;
@@ -131,27 +134,35 @@ struct GameMenu { // struct - alternativa pentru class
                 for (size_t i = 0; i < buttons.size(); ++i) {
                     if (buttons[i].getGlobalBounds().contains(mousePosF)) {
                         if (labels[i] == "Play") {
+                            audio.playClick();
                             interfata = 2;
                         }
                         else if (labels[i] == "Learn") {
+                            audio.playClick();
                             interfata = 3;
                         }
                         else if (labels[i] == "Stats") {
+                            audio.playClick();
                             interfata = 4;
                         }
                         else if (labels[i] == "Leaderboard") {
+                            audio.playClick();
                             interfata = 5;
                         }
                         else if (labels[i] == "Profiles") {
+                            audio.playClick();
                             interfata = 6;
                         }
                         else if (labels[i] == "Themes") {
+                            audio.playClick();
                             interfata = 7;
                         }
                         else if (labels[i] == "Settings") {
+                            audio.playClick();
                             interfata = 8;
                         }
                         else if (labels[i] == "Exit") {
+                            audio.playClick();
                             window.close();
                         }
                     }

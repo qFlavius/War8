@@ -3,8 +3,11 @@
 #include <optional> 
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
+#include "../SoundEffects/SoundEffects.hpp"
 
 struct LearnMenu {
+    AudioMenu audio;
+
 	sf::Font font;
 	sf::RectangleShape back;
 	sf::Text backTxt;
@@ -54,6 +57,7 @@ struct LearnMenu {
                 sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
                 if (back.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     interfata = 1;
                 }
             }

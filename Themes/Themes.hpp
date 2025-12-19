@@ -1,16 +1,16 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <vector>
 #include <iostream>
 #include <string>
 #include <optional>
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../Profile/playerData.hpp"
-
+#include "../SoundEffects/SoundEffects.hpp"
 
 struct GameThemes {
-    // MODIFICARE 1: Fontul trebuie declarat PRIMUL pentru a fi initializat inaintea textelor
+    AudioMenu audio;
+
     sf::Font font;
 
     sf::RectangleShape back, themeLabel, square1, square2, square3, square4, selectButton1;
@@ -25,7 +25,6 @@ struct GameThemes {
     sf::CircleShape peace1_3, peace2_3;
     sf::CircleShape peace1_4, peace2_4;
 
-    // MODIFICARE 2: Folosim sf::Text normal, fara std::optional
     sf::Text themeName, selectBtn, backTxt;
     sf::Text themeName_2, selectBtn_2;
     sf::Text themeName_3, selectBtn_3;
@@ -41,7 +40,6 @@ struct GameThemes {
     float screenWidth = 1920.f;
     float screenHeight = 1080.f;
 
-    // MODIFICARE 3: Initializam textele cu fontul in lista de initializare (Obligatoriu SFML 3)
     GameThemes() :
         themeName(font), selectBtn(font), backTxt(font),
         themeName_2(font), selectBtn_2(font),
@@ -110,7 +108,6 @@ struct GameThemes {
         selectButton1.setOrigin({ 125.f , 0 });
         selectButton1.setPosition({ center.x - offsetX, themeLabel.getPosition().y });
 
-        // MODIFICARE 4: Folosim "." in loc de "->"
         themeName.setFillColor(sf::Color::Black);
         themeName.setString("Default");
         themeName.setCharacterSize(60);
@@ -311,7 +308,6 @@ struct GameThemes {
             });
         selectBtn_4.setPosition(selectButton1_4.getGlobalBounds().getCenter());
 
-        // BACK BUTTON
         back.setSize(sf::Vector2f(543.f, 108.f));
         back.setPosition(sf::Vector2f(0, 1080));
         back.setOrigin({ 0, 108.f });
@@ -321,18 +317,14 @@ struct GameThemes {
         backTxt.setString("Back");
         backTxt.setCharacterSize(35);
 
-        // 1. Centram Originea textului (Asta e corect ce ai facut)
         textRect = backTxt.getLocalBounds();
         backTxt.setOrigin({
             textRect.position.x + textRect.size.x / 2.0f,
             textRect.position.y + textRect.size.y / 2.0f
             });
 
-        // 2. Calculam Centrul Butonului folosind GlobalBounds (Nu getPosition)
         sf::FloatRect btnBounds = back.getGlobalBounds();
 
-        // Centrul X = stanga butonului + jumatate din latime
-        // Centrul Y = susul butonului + jumatate din inaltime
         backTxt.setPosition({
             btnBounds.position.x + btnBounds.size.x / 2.0f,
             btnBounds.position.y + btnBounds.size.y / 2.0f
@@ -356,27 +348,32 @@ struct GameThemes {
                 sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
                 if (selectButton1.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     themes[0] = themes[1];
                     themeAdress[0] = themeAdress[1];
                     SavePlayerData();
                 }
                 else if (selectButton1_2.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     themes[0] = themes[3];
                     themeAdress[0] = themeAdress[3];
                     SavePlayerData();
                 }
                 else if (selectButton1_3.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     themes[0] = themes[2];
                     themeAdress[0] = themeAdress[2];
                     SavePlayerData();
                 }
                 else if (selectButton1_4.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     pop_Up();
                     themes[0] = themes[4];
                     themeAdress[0] = themeAdress[4];
                     SavePlayerData();
                 }
                 else if (back.getGlobalBounds().contains(mousePosF)) {
+                    audio.playClick();
                     interfata = 1;
                 }
             }
@@ -418,7 +415,6 @@ struct GameThemes {
             selectButton1_4.setFillColor(themes[4].color_buttons);
         }
 
-        // Actualizam cursorul
         if (isHovering && cursorHand.has_value()) {
             window.setMouseCursor(*cursorHand);
         }
@@ -441,7 +437,6 @@ struct GameThemes {
         window.draw(peace2);
         window.draw(selectButton1);
 
-        // MODIFICARE 5: Desenam direct textul (Fara checkuri de pointer)
         window.draw(themeName);
         window.draw(selectBtn);
 
