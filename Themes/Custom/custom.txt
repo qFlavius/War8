@@ -4,3 +4,7 @@ Hover-Buttons: AFD5CB
 Text: black
 BoardSquare1: A1C2BD
 BoardSquare2: 708993
+Peace1: B55256
+PeaceOutline1: 984447
+Peace2: 2F3940
+PeaceOutline2: 121619

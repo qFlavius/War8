@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <sstream> 
-#include <cstdint> // Pentru std::uint8_t
+#include <cstdint> // Pentru std::uint8_t maxim 8 bits, perfect pentru hex code (max 255)
 
 std::string themeAdress[5];
 Theme themes[5];

@@ -7,22 +7,6 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 
-//inline - copiaza functia si o pune in main -> Timp de executie mai mic
-inline void CenterText(sf::Text& text, const sf::RectangleShape& rect) {
-    sf::FloatRect textBounds = text.getLocalBounds();
-
-    // Pune originea in mijlocul textului, in loc de stanga sus(default)
-    text.setOrigin({
-        textBounds.position.x + textBounds.size.x / 2.0f,
-        textBounds.position.y + textBounds.size.y / 2.0f
-        });
-    //Seteaza originea in mijlocul dreptunghiului
-    text.setPosition({
-        rect.getPosition().x + rect.getSize().x / 2.0f,
-        rect.getPosition().y + rect.getSize().y / 2.0f
-        });
-}
-
 struct GameMenu { // struct - alternativa pentru class
     sf::Font font;
     std::vector<sf::RectangleShape> buttons;
@@ -86,7 +70,7 @@ struct GameMenu { // struct - alternativa pentru class
             if (!labels[i].empty()) {
                 sf::Text txt(font);
                 txt.setString(labels[i]);
-                txt.setFillColor(sf::Color::Black);
+                txt.setFillColor(themes[0].color_text);
                 txt.setCharacterSize(i == 0 ? 36 : 28);
 
                 CenterText(txt, buttons.back());
@@ -103,8 +87,11 @@ struct GameMenu { // struct - alternativa pentru class
 
         // Actualizeaza culorile cand tinem cursorul pe buton
         for (size_t i = 0; i < buttons.size(); ++i) {
-            if (labels[i] == "") continue;
-
+            if (labels[i] == "") {
+                buttons[i].setFillColor(themes[0].color_buttons);
+                continue;
+            }
+            
             if (buttons[i].getGlobalBounds().contains(mousePosF)) {
                 buttons[i].setFillColor(themes[0].color_HoverButton);
                 isHovering = true;
@@ -128,7 +115,10 @@ struct GameMenu { // struct - alternativa pentru class
             window.draw(*TablaSprite);
         }
         for (const auto& rect : buttons) window.draw(rect);
-        for (const auto& txt : texts) window.draw(txt);
+        for (auto txt : texts) {
+            txt.setFillColor(themes[0].color_text);
+            window.draw(txt);
+        }
     }
 
     void handleInput(const sf::Event& event, sf::RenderWindow& window) {

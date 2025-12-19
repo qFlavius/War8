@@ -137,10 +137,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="globalVar.hpp" />
+    <ClInclude Include="LeaderBoard\leaderboard.hpp" />
+    <ClInclude Include="Learn\learn.hpp" />
     <ClInclude Include="MainMenu\MainMenu.hpp" />
     <ClInclude Include="PlayScreen.hpp" />
     <ClInclude Include="PlayScreen\PlayScreen.hpp" />
+    <ClInclude Include="Profiles\profiles.hpp" />
     <ClInclude Include="Profile\playerData.hpp" />
+    <ClInclude Include="Settings\settings.hpp" />
+    <ClInclude Include="Stats\stats.hpp" />
     <ClInclude Include="Themes\Themes.hpp" />
     <ClInclude Include="Themes\themesRead.h" />
   </ItemGroup>

@@ -16,25 +16,43 @@
     <Filter Include="PlayScreen">
       <UniqueIdentifier>{6d077f7a-7598-405c-8540-f6ec524bc65b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Profile">
+      <UniqueIdentifier>{6df38a03-f3e1-4613-be65-e11789679a3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MainMenu">
+      <UniqueIdentifier>{3e1f1aa4-4335-4e4f-8c12-47b43b8fb675}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Themes">
+      <UniqueIdentifier>{ad1e6df2-6b32-42a0-8228-fd129b353eb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Stats">
+      <UniqueIdentifier>{c6fe3771-1c84-49f6-a1bc-b21d31368c2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Learn">
+      <UniqueIdentifier>{244e57f6-74ac-47b4-a4da-aa0018f59184}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Settings">
+      <UniqueIdentifier>{e1780d6e-86b4-4826-88b8-b3edf546a316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LeaderBoard">
+      <UniqueIdentifier>{f80e4879-edb7-4a87-b018-4169231c5733}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Profiles">
+      <UniqueIdentifier>{954147f5-97d7-4aa6-8498-639429fee04e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Themes\themesRead.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="PlayScreen\PlayScreen.cpp">
       <Filter>PlayScreen</Filter>
     </ClCompile>
+    <ClCompile Include="Themes\themesRead.cpp">
+      <Filter>Header Files\Themes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MainMenu\MainMenu.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Themes\themesRead.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="globalVar.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -44,11 +62,32 @@
     <ClInclude Include="PlayScreen\PlayScreen.hpp">
       <Filter>PlayScreen</Filter>
     </ClInclude>
-    <ClInclude Include="Themes\Themes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Profile\playerData.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Profile</Filter>
+    </ClInclude>
+    <ClInclude Include="MainMenu\MainMenu.hpp">
+      <Filter>Header Files\MainMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="Themes\Themes.hpp">
+      <Filter>Header Files\Themes</Filter>
+    </ClInclude>
+    <ClInclude Include="Themes\themesRead.h">
+      <Filter>Header Files\Themes</Filter>
+    </ClInclude>
+    <ClInclude Include="Stats\stats.hpp">
+      <Filter>Header Files\Stats</Filter>
+    </ClInclude>
+    <ClInclude Include="Learn\learn.hpp">
+      <Filter>Header Files\Learn</Filter>
+    </ClInclude>
+    <ClInclude Include="Settings\settings.hpp">
+      <Filter>Header Files\Settings</Filter>
+    </ClInclude>
+    <ClInclude Include="Profiles\profiles.hpp">
+      <Filter>Header Files\Profiles</Filter>
+    </ClInclude>
+    <ClInclude Include="LeaderBoard\leaderboard.hpp">
+      <Filter>Header Files\LeaderBoard</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
