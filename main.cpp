@@ -1,45 +1,3 @@
-/*
-#include <SFML/Graphics.hpp>
-#include "Themes/themesRead.h"
-#include "MainMenu/MainMenu.hpp"
-#include "globalVar.hpp"
-
-int interfata = 1;
-
-int main()
-{
-    Themes(); // Initializeaza culorile
-
-    sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), "Razboi in 8");
-    window.setFramerateLimit(60);
-
-    GameMenu menu; // Meniul Principal
-
-    while (window.isOpen()) {
-        while (auto event = window.pollEvent()) {
-
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-            }
-            if (interfata == 1) {
-                menu.handleInput(*event, window);
-            }
-
-        }
-
-        window.clear(color_bg);
-
-        if (interfata == 1) {
-            menu.draw(window);
-        }
-
-        window.display();
-    }
-
-    return 0;
-}
-*/
-
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
@@ -55,6 +13,7 @@ int main()
 #include "LeaderBoard/leaderboard.hpp"
 #include "Profiles/profiles.hpp"
 #include "Settings/settings.hpp"
+#include "AI/AIPlayer.hpp"
 
 // variabila globala folosita in tot proiectul
 int interfata = 1;
@@ -63,8 +22,23 @@ int main()
 {
     LoadPlayerData();
     Themes(); // initializeaza culorile (color_bg, etc.)
+
     sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), "Razboi in 8");
     window.setFramerateLimit(60);
+
+    // Initializeaza seed-ul pentru generatorul de numere pseudo-aleatoare al calculatorului.
+    // Folosesc adrese (care de obicei difera intre rulari datorita ASLR) + dimensiunea ferestrei
+
+    {
+        std::uint32_t s = (std::uint32_t)(
+            (std::uintptr_t)&window ^
+            (std::uintptr_t)&interfata ^
+            ((std::uint32_t)window.getSize().x << 16) ^
+            (std::uint32_t)window.getSize().y
+            );
+        if (s == 0) s = 1;
+        AI_Seed(s);
+    }
 
     GameMenu menu;
     GameThemes themePage;

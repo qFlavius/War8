@@ -1,23 +1,32 @@
 #include "PlayScreen.hpp"
+
 #include <cstdint>
 #include <cstdio>                // snprintf
 #include <SFML/System/Angle.hpp> // sf::degrees (SFML 3)
+
 #include "../SoundEffects/SoundEffects.hpp"
+
+// fisiere noi din proiect (config + inteligenta artificiala)
+#include "../GameConfig.hpp"
+#include "../AI/AIPlayer.hpp"
 
 // ============================================================================
 //  PLAYSCREEN
 //  - Nu folosesc clase proprii, doar variabile globale + functii.
-//  - Exista 3 stari (phase):
-//      0) Introduc numele jucatorilor
-//      1) Jocul propriu-zis
-//      2) Final: afisez castigatorul + efecte grafice
+//  - Fluxul in Play:
+//      0) Aleg modul de joc (Player vs Player / Player vs Computer / Computer vs Computer)
+//      1) Introduc numele (doar pentru jucatorii umani)
+//      2) Optiuni (timer pe tura + dificultati pentru computer)
+//      3) Jocul propriu-zis
+//      4) Final: afisez castigatorul + efecte grafice
 //
-//  Reguli implementate:
+//  Reguli implementate (aceleasi ca in varianta ta initiala):
 //  - Mutare: 1 pas pe diagonala intr-o celula libera.
 //  - Dupa un prag de mutari (captureAfterPly), elimin automat piesele blocate
-//    (adica fara mutari legale). Asta e "captura" prin blocare in varianta PC.
+//    (adica fara mutari legale). Asta este captura prin blocare.
 //  - Final: cand cineva ramane fara piese / limita de mutari / un jucator nu mai are mutari.
-//  - Castigator: cine are mai multe piese ramase (simplu si clar).
+//  - Castigator (normal): cine are mai multe piese ramase.
+//  - Timer pe tura (optional): daca timpul expira pentru un jucator UMAN, pierde tura (nu muta nimic).
 // ============================================================================
 
 
@@ -25,79 +34,117 @@
 
 AudioMenu audio;
 
-// Tabla: 0 liber, 1 alb, 2 negru
+// faze ecran
+static const int PHASE_MODE = 0;
+static const int PHASE_NAMES = 1;
+static const int PHASE_OPTIONS = 2;
+static const int PHASE_GAME = 3;
+static const int PHASE_OVER = 4;
+
+// 0 liber, 1 alb, 2 negru
 static std::uint8_t g_board[8][8];
 
-// Tura curenta: 1 alb, 2 negru
+// tura curenta: 1 alb, 2 negru
 static std::uint8_t g_turn = 1;
 
-// Selectie: daca am selectat o piesa
+// selectie piesa
 static bool g_hasSel = false;
 static int  g_selR = 0;
 static int  g_selC = 0;
 
-// Mutari posibile pentru piesa selectata (maxim 4 diagonale)
+// mutari posibile (maxim 4 diagonale)
 static int g_movesR[4];
 static int g_movesC[4];
 static int g_moveCount = 0;
 
-// Contor mutari (half-moves) + prag cand incepem eliminarea pieselor blocate
-static int g_ply = 0;              // creste cu 1 dupa fiecare mutare
-static int g_captureAfterPly = 8;  // 4 mutari alb + 4 mutari negru
-static int g_maxPly = 200;         // limita de siguranta (poti schimba)
+// contor mutari (half-moves) + prag cand incep capturile prin blocare
+static int g_ply = 0;
+static int g_captureAfterPly = 8;
+static int g_maxPly = 200;
 
-// Capturi: cate piese adverse au fost eliminate dupa mutarile fiecaruia
-static int g_capturedByWhite = 0;  // cate piese NEGRE a scos ALB
-static int g_capturedByBlack = 0;  // cate piese ALBE a scos NEGRU
+// capturi: cate piese adverse au fost eliminate dupa mutarile fiecaruia
+static int g_capturedByWhite = 0;
+static int g_capturedByBlack = 0;
 
-// Timer pentru timpul scurs de la start/reset
+// timp total scurs in joc
 static sf::Clock g_gameClock;
 
+// timer pe tura (doar pentru jucatorii umani)
+static sf::Clock g_turnClock;
+static bool g_useTurnTimer = false;
+static int  g_turnLimitSeconds = 60; // default 01:00
+static char g_turnTimeStr[6] = "01:00"; // format MM:SS
+static bool g_editTurnTime = false;
+static int  g_turnTimeCursor = 0; // 0,1,3,4 (pozitii in string)
 
-// ------------------------------ STARI ECRAN ------------------------------
-// 0 = introdu nume, 1 = joc, 2 = final
-static int g_phase = 0;
+// pentru mutari de computer: un mic delay, sa se vada ca "gandeste"
+static sf::Clock g_aiClock;
+// delay mic, doar ca sa se vada ca "gandeste"; daca e prea mare pare ca se blocheaza
+static float g_aiThinkDelay = 0.15f;
 
+// clock separat pentru seed (depinde de cat dureaza pana apesi START)
+static sf::Clock g_seedClock;
 
-// ------------------------------ NUME JUCATORI ------------------------------
-// Folosesc char[]
+// configurare (mod + cine e computer + dificultati)
+static GameMode g_mode = GameMode::PvP;
+static bool g_isComputerWhite = false;
+static bool g_isComputerBlack = false;
+static Difficulty g_diffWhite = Difficulty::Easy;
+static Difficulty g_diffBlack = Difficulty::Easy;
+
+// nume jucatori (char[] ca in codul tau)
 static char g_nameWhite[24] = "";
 static char g_nameBlack[24] = "";
 static int  g_lenWhite = 0;
 static int  g_lenBlack = 0;
-static int  g_activeName = 0; // 0 = editez numele albului, 1 = editez numele negrului
+static int  g_activeName = 0; // 0 = alb, 1 = negru, -1 = nimic editabil
 
-// Castigator: 0 remiza, 1 alb, 2 negru
+// faza curenta
+static int g_phase = PHASE_MODE;
+
+// castigator: 0 remiza, 1 alb, 2 negru
 static int g_winner = 0;
+static char g_overReason[64] = ""; // motiv final (ex: "Time out")
 
 
 // ------------------------------ TEXT (SFML 3) ------------------------------
-// In SFML 3, sf::Text NU are constructor default, deci il construiesc cu fontul.
+
 static sf::Font g_font;
 static bool g_fontReady = false;
 
-static sf::Text g_hud(g_font);
-
+// texte generale
 static sf::Text g_title(g_font);
+static sf::Text g_hint(g_font);
+
+// ecran nume
 static sf::Text g_labelWhite(g_font);
 static sf::Text g_labelBlack(g_font);
 static sf::Text g_nameTextWhite(g_font);
 static sf::Text g_nameTextBlack(g_font);
-static sf::Text g_hint(g_font);
 
+// ecran game hud
+static sf::Text g_hudTurn(g_font);
+static sf::Text g_hudRemain(g_font);
+static sf::Text g_hudLeft(g_font);
+static sf::Text g_hudRight(g_font);
+static sf::Text g_hudTime(g_font);
+
+// ecran final
 static sf::Text g_overTitle(g_font);
 static sf::Text g_overWinner(g_font);
 static sf::Text g_overHint(g_font);
+static sf::Text g_overReasonText(g_font);
 
 
 // ------------------------------ LAYOUT / RAMA ------------------------------
-static float g_tile = 100.f; // marimea unui patrat
-static float g_frame = 30.f;  // grosimea ramei
-static sf::Vector2f g_origin(0.f, 0.f); // coltul stanga-sus al tablei (doar tabla, fara rama)
+
+static float g_tile = 100.f;
+static float g_frame = 30.f;
+static sf::Vector2f g_origin(0.f, 0.f);
 
 
 // ------------------------------ CONFETTI (final) ------------------------------
-// Efect ff simplu: patrate mici care cad
+
 static const int CONF_N = 90;
 static sf::Vector2f g_confPos[CONF_N];
 static sf::Vector2f g_confVel[CONF_N];
@@ -118,7 +165,30 @@ static std::uint8_t otherSide(std::uint8_t p) {
 }
 
 /*
-  Random simplu (LCG). Nu e pentru joc, doar pentru efectul vizual confetti
+  Verifica daca o parte (alb / negru) este controlata de computer.
+*/
+static bool isComputerSide(std::uint8_t side) {
+    if (side == 1) return g_isComputerWhite;
+    if (side == 2) return g_isComputerBlack;
+    return false;
+}
+
+/*
+  Copiere simpla de string fara <cstring>.
+*/
+static void strCopy(char* dst, int dstMax, const char* src) {
+    if (dstMax <= 0) return;
+    int i = 0;
+    while (src[i] != 0 && i < dstMax - 1) {
+        dst[i] = src[i];
+        i++;
+    }
+    dst[i] = 0;
+}
+
+/*
+  Random simplu (generator liniar congruential).
+  Nu este folosit pentru joc, doar pentru efectul vizual confetti.
 */
 static std::uint32_t rngNext() {
     g_rng = 1664525u * g_rng + 1013904223u;
@@ -138,55 +208,19 @@ static void boardClear() {
 }
 
 /*
-  Pune piesele in pozitia initiala standard.
+  Pozitie initiala.
   Observatie: randul 0 e sus (8), randul 7 e jos (1).
 */
 static void boardSetupInitialPosition() {
     boardClear();
 
     // ALB (jos)
-    for (int c = 0; c < 8; c += 2) g_board[7][c] = 1; // a1,c1,e1,g1
-    for (int c = 1; c < 8; c += 2) g_board[6][c] = 1; // b2,d2,f2,h2
+    for (int c = 0; c < 8; c += 2) g_board[7][c] = 1;
+    for (int c = 1; c < 8; c += 2) g_board[6][c] = 1;
 
     // NEGRU (sus)
-    for (int c = 1; c < 8; c += 2) g_board[0][c] = 2; // b8,d8,f8,h8
-    for (int c = 0; c < 8; c += 2) g_board[1][c] = 2; // a7,c7,e7,g7
-}
-
-/*
-  Reseteaza meciul (tabla + contori + timer), dar nu sterge numele.
-  Il folosesc pentru "rematch".
-*/
-static void resetMatchKeepNames() {
-    boardSetupInitialPosition();
-
-    g_turn = 1;
-    g_hasSel = false;
-    g_moveCount = 0;
-
-    g_ply = 0;
-    g_capturedByWhite = 0;
-    g_capturedByBlack = 0;
-
-    g_gameClock.restart();
-}
-
-/*
-  Reseteaza tot si te duce in ecranul de introducere nume.
-*/
-static void resetAllToNameEntry() {
-    g_phase = 0;
-
-    g_lenWhite = 0;
-    g_lenBlack = 0;
-    g_nameWhite[0] = '\0';
-    g_nameBlack[0] = '\0';
-    g_activeName = 0;
-
-    g_winner = 0;
-    g_overClock.restart();
-
-    resetMatchKeepNames();
+    for (int c = 1; c < 8; c += 2) g_board[0][c] = 2;
+    for (int c = 0; c < 8; c += 2) g_board[1][c] = 2;
 }
 
 /*
@@ -196,8 +230,30 @@ static void updateLayout(sf::RenderWindow& w) {
     const auto sz = w.getSize();
     const float boardPx = g_tile * 8.f;
 
+    // Pozitionez tabla centrat pe ecran.
     g_origin.x = (float(sz.x) - boardPx) / 2.f;
     g_origin.y = (float(sz.y) - boardPx) / 2.f;
+
+    // In timpul jocului vreau spatiu deasupra tablei pentru HUD (tura + timp ramas).
+    // De aceea imping tabla putin in jos. In restul meniurilor, o las perfect centrat.
+    if (g_phase == PHASE_GAME || g_phase == PHASE_OVER) {
+        const float headerH = 120.f;
+        const float headerGap = 16.f;
+        const float minTop = 18.f;
+        const float neededTop = minTop + headerH + headerGap + g_frame;
+
+        if (g_origin.y < neededTop) {
+            g_origin.y = neededTop;
+        }
+
+        // Daca cumva nu mai incape jos, o ridic cat pot.
+        const float boardBottom = g_origin.y + boardPx + g_frame;
+        const float maxBottom = (float)sz.y - 18.f;
+        if (boardBottom > maxBottom) {
+            g_origin.y -= (boardBottom - maxBottom);
+            if (g_origin.y < neededTop) g_origin.y = neededTop;
+        }
+    }
 }
 
 /*
@@ -215,16 +271,23 @@ static bool mouseToCell(sf::RenderWindow& w, int& outR, int& outC) {
     int r = int((m.y - g_origin.y) / g_tile);
 
     if (r < 0 || r > 7 || c < 0 || c > 7) return false;
-
     outR = r;
     outC = c;
     return true;
 }
 
 /*
+  Helper: verifica daca mouse-ul este in dreptunghi (pentru butoane in meniuri).
+*/
+static bool mouseInRect(sf::RenderWindow& w, const sf::FloatRect& r) {
+    sf::Vector2i mp = sf::Mouse::getPosition(w);
+    sf::Vector2f m = w.mapPixelToCoords(mp);
+    return r.contains(m);
+}
+
+/*
   Genereaza mutarile legale pentru piesa din (fromR, fromC).
   Regula: 1 pas pe diagonala intr-o casuta libera, in orice directie.
-  Returneaza cate mutari a gasit (0..4) si umple outR/outC.
 */
 static int genMoves(int fromR, int fromC, int outR[4], int outC[4]) {
     if (g_board[fromR][fromC] == 0) return 0;
@@ -294,19 +357,19 @@ static int decideWinnerByPieces() {
 }
 
 /*
-  Pregateste particulele de confetti (pozitie, viteza, marime).
+  Pregateste particulele de confetti.
 */
 static void initConfetti(sf::RenderWindow& w) {
     auto sz = w.getSize();
     float W = (float)sz.x;
     float H = (float)sz.y;
 
-    // un seed mic ca sa arate diferit la fiecare final
+    // seed mic ca sa arate diferit la fiecare final
     g_rng = 1u + (std::uint32_t)(g_gameClock.getElapsedTime().asMilliseconds() + 12345);
 
     for (int i = 0; i < CONF_N; i++) {
         g_confPos[i].x = rng01() * W;
-        g_confPos[i].y = rng01() * H * 0.5f; // pornesc de sus
+        g_confPos[i].y = rng01() * H * 0.5f;
         g_confVel[i].x = (rng01() - 0.5f) * 40.f;
         g_confVel[i].y = 80.f + rng01() * 180.f;
         g_confSize[i] = 3.f + rng01() * 6.f;
@@ -316,17 +379,28 @@ static void initConfetti(sf::RenderWindow& w) {
 }
 
 /*
-  Intra in starea de final (phase=2), calculeaza castigatorul si porneste confetti.
+  Intra in starea de final (phase=over) cu castigator calculat din piese.
 */
 static void enterGameOver(sf::RenderWindow& w) {
-    g_phase = 2;
+    g_phase = PHASE_OVER;
     g_winner = decideWinnerByPieces();
+    g_overReason[0] = 0;
+    initConfetti(w);
+}
+
+/*
+  Intra in starea de final (phase=over) cu castigator fortat (ex: time out).
+*/
+static void enterGameOverForced(sf::RenderWindow& w, int winner, const char* reason) {
+    g_phase = PHASE_OVER;
+    g_winner = winner;
+    strCopy(g_overReason, (int)sizeof(g_overReason), reason);
     initConfetti(w);
 }
 
 /*
   Verifica daca meciul s-a terminat.
-  Cazuri tratate:
+  Cazuri:
   - cineva are 0 piese
   - am ajuns la limita de mutari
   - unul dintre jucatori nu mai are mutari legale
@@ -337,60 +411,246 @@ static void checkGameOver(sf::RenderWindow& w) {
 
     if (wPieces == 0 || bPieces == 0) { enterGameOver(w); return; }
     if (g_ply >= g_maxPly) { enterGameOver(w); return; }
-
-    if (!hasAnyMove(1) || !hasAnyMove(2)) {
-        enterGameOver(w);
-        return;
-    }
+    if (!hasAnyMove(1) || !hasAnyMove(2)) { enterGameOver(w); return; }
 }
 
 /*
-  Elimina toate piesele blocate (fara mutari) simultan.
-  Important: contorizez capturile doar pentru piesele adversarului eliminate.
+  Elimina automat piesele ADVERSARULUI care sunt blocate (fara mutari legale).
+  Important:
+  - nu elimin piesele jucatorului care tocmai a mutat
+  - eliminarea se aplica simultan tuturor pieselor adversarului blocate
+  - contorizez capturile pentru jucatorul care a mutat
 */
-static void removeBlockedAll(std::uint8_t mover) {
+static void removeBlockedOpponent(std::uint8_t mover) {
+    std::uint8_t opp = otherSide(mover);
+
     int remR[64], remC[64];
-    std::uint8_t remPiece[64];
     int remCnt = 0;
 
     int tmpR[4], tmpC[4];
 
-    // 1) colectez toate piesele blocate
     for (int r = 0; r < 8; r++) {
         for (int c = 0; c < 8; c++) {
-            if (g_board[r][c] == 0) continue;
+            if (g_board[r][c] != opp) continue;
 
             if (genMoves(r, c, tmpR, tmpC) == 0) {
                 remR[remCnt] = r;
                 remC[remCnt] = c;
-                remPiece[remCnt] = g_board[r][c];
                 remCnt++;
             }
         }
     }
 
-    // 2) elimin simultan si numar cate au fost albe / negre
-    int removedWhite = 0;
-    int removedBlack = 0;
-
     for (int i = 0; i < remCnt; i++) {
-        if (remPiece[i] == 1) removedWhite++;
-        else if (remPiece[i] == 2) removedBlack++;
-
         g_board[remR[i]][remC[i]] = 0;
     }
 
-    // 3) actualizez contorul de capturi (doar adversarul conteaza)
-    if (mover == 1) g_capturedByWhite += removedBlack;
-    else if (mover == 2) g_capturedByBlack += removedWhite;
+    if (mover == 1) g_capturedByWhite += remCnt;
+    else if (mover == 2) g_capturedByBlack += remCnt;
+}
+
+
+/*
+  Parseaza stringul MM:SS in secunde.
+  Daca valorile sunt invalide, intoarce 0.
+*/
+static int parseTimeMMSS(const char s[6]) {
+    if (s[0] < '0' || s[0] > '9') return 0;
+    if (s[1] < '0' || s[1] > '9') return 0;
+    if (s[2] != ':') return 0;
+    if (s[3] < '0' || s[3] > '9') return 0;
+    if (s[4] < '0' || s[4] > '9') return 0;
+    int mm = (s[0] - '0') * 10 + (s[1] - '0');
+    int ss = (s[3] - '0') * 10 + (s[4] - '0');
+    if (ss > 59) ss = 59;
+    return mm * 60 + ss;
+}
+
+/*
+  Reseteaza meciul (tabla + contori + timer), dar nu schimba config-ul ales.
+  Il folosesc pentru "rematch" si pentru start.
+*/
+static void resetMatchKeepNames() {
+    boardSetupInitialPosition();
+
+    g_turn = 1;
+    g_hasSel = false;
+    g_moveCount = 0;
+
+    g_ply = 0;
+    g_capturedByWhite = 0;
+    g_capturedByBlack = 0;
+
+    g_gameClock.restart();
+    g_turnClock.restart();
+    g_aiClock.restart();
+}
+
+/*
+  Reseteaza toate ecranele din Play si revine la alegerea modului.
+*/
+static void resetAllToModeSelect() {
+    g_phase = PHASE_MODE;
+
+    g_mode = GameMode::PvP;
+    g_isComputerWhite = false;
+    g_isComputerBlack = false;
+    g_diffWhite = Difficulty::Easy;
+    g_diffBlack = Difficulty::Easy;
+
+    g_lenWhite = 0; g_nameWhite[0] = 0;
+    g_lenBlack = 0; g_nameBlack[0] = 0;
+    g_activeName = 0;
+
+    g_useTurnTimer = false;
+    g_turnLimitSeconds = 60;
+    strCopy(g_turnTimeStr, 6, "01:00");
+    g_editTurnTime = false;
+    g_turnTimeCursor = 0;
+
+    g_winner = 0;
+    g_overReason[0] = 0;
+
+    resetMatchKeepNames();
+}
+
+/*
+  Alege urmatorul camp editabil pentru nume (sare peste computer).
+*/
+static int nextEditableNameField(int from) {
+    // incerc cealalta parte
+    int other = 1 - from;
+    if (other == 0 && !g_isComputerWhite) return 0;
+    if (other == 1 && !g_isComputerBlack) return 1;
+    // daca nici celalalt nu e editabil, incerc pe cel curent
+    if (from == 0 && !g_isComputerWhite) return 0;
+    if (from == 1 && !g_isComputerBlack) return 1;
+    return -1;
+}
+
+/*
+  Initializeaza modul ales (cine este computer) si pregateste numele.
+*/
+static void applyModeAndPrepareNames(GameMode mode) {
+    g_mode = mode;
+
+    if (mode == GameMode::PvP) {
+        g_isComputerWhite = false;
+        g_isComputerBlack = false;
+    }
+    else if (mode == GameMode::PvC) {
+        g_isComputerWhite = false;
+        g_isComputerBlack = true;
+    }
+    else {
+        g_isComputerWhite = true;
+        g_isComputerBlack = true;
+    }
+
+    // reset nume la intrarea in ecranul de nume
+    g_lenWhite = 0; g_nameWhite[0] = 0;
+    g_lenBlack = 0; g_nameBlack[0] = 0;
+
+    // nume default pentru computer
+    if (g_isComputerWhite) {
+        strCopy(g_nameWhite, 24, "Computer Alb");
+        g_lenWhite = 0;
+        while (g_nameWhite[g_lenWhite] != 0 && g_lenWhite < 23) g_lenWhite++;
+    }
+    if (g_isComputerBlack) {
+        strCopy(g_nameBlack, 24, "Computer Negru");
+        g_lenBlack = 0;
+        while (g_nameBlack[g_lenBlack] != 0 && g_lenBlack < 23) g_lenBlack++;
+    }
+
+    // activeName: primul camp editabil
+    if (!g_isComputerWhite) g_activeName = 0;
+    else if (!g_isComputerBlack) g_activeName = 1;
+    else g_activeName = -1;
+}
+
+/*
+  Adauga un caracter in numele ales (0=alb, 1=negru).
+  Daca acel jucator este computer, ignor.
+*/
+static void appendCharToName(int which, char ch) {
+    if (which == 0) {
+        if (g_isComputerWhite) return;
+        if (g_lenWhite >= 23) return;
+        g_nameWhite[g_lenWhite++] = ch;
+        g_nameWhite[g_lenWhite] = '\0';
+    }
+    else {
+        if (g_isComputerBlack) return;
+        if (g_lenBlack >= 23) return;
+        g_nameBlack[g_lenBlack++] = ch;
+        g_nameBlack[g_lenBlack] = '\0';
+    }
+}
+
+/*
+  Sterge ultimul caracter (Backspace). Daca jucatorul este computer, ignor.
+*/
+static void backspaceName(int which) {
+    if (which == 0) {
+        if (g_isComputerWhite) return;
+        if (g_lenWhite <= 0) return;
+        g_lenWhite--; g_nameWhite[g_lenWhite] = '\0';
+    }
+    else {
+        if (g_isComputerBlack) return;
+        if (g_lenBlack <= 0) return;
+        g_lenBlack--; g_nameBlack[g_lenBlack] = '\0';
+    }
+}
+
+/*
+  Dupa nume, trec in ecranul de optiuni.
+  Daca un nume uman e gol, pun P1 / P2.
+*/
+static void goToOptionsFromNames() {
+    if (!g_isComputerWhite && g_lenWhite == 0) {
+        appendCharToName(0, 'P');
+        appendCharToName(0, '1');
+    }
+    if (!g_isComputerBlack && g_lenBlack == 0) {
+        appendCharToName(1, 'P');
+        appendCharToName(1, '2');
+    }
+
+    g_editTurnTime = false;
+    g_turnTimeCursor = 0;
+    g_phase = PHASE_OPTIONS;
+}
+
+/*
+  Porneste jocul din ecranul de optiuni.
+  - parseaza timpul MM:SS
+  - seteaza seed pentru inteligenta artificiala (depinde de timpul petrecut in meniu)
+  - reseteaza meciul
+*/
+static void startGameFromOptions() {
+    g_turnLimitSeconds = parseTimeMMSS(g_turnTimeStr);
+    if (!g_useTurnTimer) g_turnLimitSeconds = 0;
+    if (g_useTurnTimer && g_turnLimitSeconds <= 0) g_turnLimitSeconds = 60;
+
+    // seed: depinde de cat timp ai stat pana ai apasat START + lungimi nume
+    std::uint32_t seed = (std::uint32_t)g_seedClock.getElapsedTime().asMicroseconds();
+    seed ^= (std::uint32_t)(g_lenWhite * 131 + g_lenBlack * 17);
+    if (seed == 0) seed = 1;
+    AI_Seed(seed);
+
+    resetMatchKeepNames();
+    g_phase = PHASE_GAME;
 }
 
 /*
   Aplica o mutare (fr,fc)->(tr,tc):
   - mut piesa pe tabla
   - cresc contorul de mutari
-  - dupa prag, aplic eliminarea pieselor blocate
+  - dupa prag, aplic eliminarea pieselor adversarului blocate
   - schimb tura
+  - resetez timer-ul pe tura (doar daca urmeaza un jucator uman)
   - verific finalul
 */
 static void doMove(int fr, int fc, int tr, int tc, sf::RenderWindow& w) {
@@ -401,14 +661,20 @@ static void doMove(int fr, int fc, int tr, int tc, sf::RenderWindow& w) {
 
     g_hasSel = false;
     g_moveCount = 0;
-
     g_ply++;
 
     if (g_ply >= g_captureAfterPly) {
-        removeBlockedAll(mover);
+        removeBlockedOpponent(mover);
     }
 
     g_turn = otherSide(g_turn);
+
+    // resetez timer-ul pe tura doar pentru jucatori umani
+    if (g_useTurnTimer && !isComputerSide(g_turn)) {
+        g_turnClock.restart();
+    }
+    // pentru computer, resetez clock-ul de "gandire"
+    g_aiClock.restart();
 
     checkGameOver(w);
 }
@@ -449,52 +715,67 @@ static void clickCellInGame(int r, int c, sf::RenderWindow& w) {
 }
 
 
-// ============================================================================
-//  Editare nume 
-// ============================================================================
-
 /*
-  Adauga un caracter in numele ales (0=alb, 1=negru).
+  Cand expira timpul unei ture pentru un jucator uman:
+  - jucatorul pierde tura (nu muta nimic)
+  - se schimba tura la celalalt jucator
+  - cresc contorul de mutari (ply), ca sa nu poti abuza de timeout ca sa amani finalul
 */
-static void appendCharToName(int which, char ch) {
-    if (which == 0) {
-        if (g_lenWhite >= 23) return;
-        g_nameWhite[g_lenWhite++] = ch;
-        g_nameWhite[g_lenWhite] = '\0';
+static void skipTurnBecauseTimeOut(sf::RenderWindow& w) {
+    // anulez orice selectie / highlight
+    g_hasSel = false;
+    g_moveCount = 0;
+
+    // consum o tura chiar daca nu s-a mutat nimic
+    g_ply++;
+
+    // schimb tura
+    g_turn = otherSide(g_turn);
+
+    // resetez timer-ul pe tura doar pentru jucatori umani
+    if (g_useTurnTimer && !isComputerSide(g_turn) && g_turnLimitSeconds > 0) {
+        g_turnClock.restart();
     }
-    else {
-        if (g_lenBlack >= 23) return;
-        g_nameBlack[g_lenBlack++] = ch;
-        g_nameBlack[g_lenBlack] = '\0';
-    }
+
+    // pentru computer, resetez clock-ul de "gandire"
+    g_aiClock.restart();
+
+    checkGameOver(w);
 }
 
 /*
-  Sterge ultimul caracter (Backspace).
+  Update in timpul jocului:
+  - daca e timer pe tura si jucatorul UMAN a depasit limita -> pierde
+  - daca este tura unui computer -> calculez o mutare dupa un delay
 */
-static void backspaceName(int which) {
-    if (which == 0) {
-        if (g_lenWhite <= 0) return;
-        g_lenWhite--;
-        g_nameWhite[g_lenWhite] = '\0';
-    }
-    else {
-        if (g_lenBlack <= 0) return;
-        g_lenBlack--;
-        g_nameBlack[g_lenBlack] = '\0';
-    }
-}
+static void updateGameAutomations(sf::RenderWindow& w) {
+    if (g_phase != PHASE_GAME) return;
 
-/*
-  Cand apas ENTER pe al doilea camp, pornesc jocul.
-  Daca numele e gol, pun P1 / P2 ca fallback.
-*/
-static void startGameFromNames() {
-    if (g_lenWhite == 0) { appendCharToName(0, 'P'); appendCharToName(0, '1'); }
-    if (g_lenBlack == 0) { appendCharToName(1, 'P'); appendCharToName(1, '2'); }
+    // time out (doar pentru jucatorii umani)
+    if (g_useTurnTimer && !isComputerSide(g_turn) && g_turnLimitSeconds > 0) {
+        int sec = (int)g_turnClock.getElapsedTime().asSeconds();
+        if (sec >= g_turnLimitSeconds) {
+            // penalizare: jucatorul pierde tura
+            skipTurnBecauseTimeOut(w);
+            return;
+        }
+    }
 
-    resetMatchKeepNames();
-    g_phase = 1;
+    // mutare computer
+    if (isComputerSide(g_turn)) {
+        float t = g_aiClock.getElapsedTime().asSeconds();
+        if (t < g_aiThinkDelay) return;
+
+        Difficulty diff = (g_turn == 1) ? g_diffWhite : g_diffBlack;
+        AIMove mv = AI_ChooseMove(g_board, g_turn, g_ply, g_captureAfterPly, diff);
+        if (!mv.valid) {
+            enterGameOver(w);
+            return;
+        }
+
+        doMove(mv.fr, mv.fc, mv.tr, mv.tc, w);
+        // doMove restarteaza deja g_aiClock
+    }
 }
 
 
@@ -504,16 +785,15 @@ static void startGameFromNames() {
 
 /*
   Setez stilurile pentru toate textele (marimi + culori).
-  Apelez dupa ce fontul a fost incarcat cu succes.
 */
 static void setupTextStyles() {
     if (!g_fontReady) return;
 
-    g_hud.setCharacterSize(20);
-    g_hud.setFillColor(sf::Color::Black);
-
     g_title.setCharacterSize(34);
     g_title.setFillColor(sf::Color::Black);
+
+    g_hint.setCharacterSize(18);
+    g_hint.setFillColor(sf::Color::Black);
 
     g_labelWhite.setCharacterSize(22);
     g_labelWhite.setFillColor(sf::Color::Black);
@@ -527,8 +807,22 @@ static void setupTextStyles() {
     g_nameTextBlack.setCharacterSize(28);
     g_nameTextBlack.setFillColor(sf::Color::Black);
 
-    g_hint.setCharacterSize(18);
-    g_hint.setFillColor(sf::Color::Black);
+    // HUD: numele jucatorului in tura (mai mare) + timpul ramas sub el
+    g_hudTurn.setCharacterSize(34);
+    g_hudTurn.setFillColor(sf::Color::Black);
+
+    g_hudRemain.setCharacterSize(30);
+    g_hudRemain.setFillColor(sf::Color::Black);
+
+    g_hudLeft.setCharacterSize(22);
+    g_hudLeft.setFillColor(sf::Color::Black);
+
+    g_hudRight.setCharacterSize(22);
+    g_hudRight.setFillColor(sf::Color::Black);
+
+    // HUD: timpul total scurs in joc (format MM:SS)
+    g_hudTime.setCharacterSize(22);
+    g_hudTime.setFillColor(sf::Color::Black);
 
     g_overTitle.setCharacterSize(42);
     g_overTitle.setFillColor(sf::Color::White);
@@ -536,35 +830,34 @@ static void setupTextStyles() {
     g_overWinner.setCharacterSize(54);
     g_overWinner.setFillColor(sf::Color::White);
 
+    g_overReasonText.setCharacterSize(22);
+    g_overReasonText.setFillColor(sf::Color(230, 230, 230));
+
     g_overHint.setCharacterSize(20);
     g_overHint.setFillColor(sf::Color(230, 230, 230));
 }
 
 
 // ============================================================================
-//  DESENARE
+//  DESENARE: tabla
 // ============================================================================
 
 /*
-  Desenez o rama cu umbra
-  Tabla propriu-zisa ramane 8x8 in interior
+  Desenez o rama cu umbra.
 */
 static void drawFrame(sf::RenderWindow& w) {
     const float boardPx = g_tile * 8.f;
 
-    // umbra
     sf::RectangleShape shadow({ boardPx + 2.f * g_frame + 8.f, boardPx + 2.f * g_frame + 8.f });
     shadow.setPosition({ g_origin.x - g_frame + 6.f, g_origin.y - g_frame + 6.f });
     shadow.setFillColor(sf::Color(0, 0, 0, 70));
     w.draw(shadow);
 
-    // rama lemn
     sf::RectangleShape frame({ boardPx + 2.f * g_frame, boardPx + 2.f * g_frame });
     frame.setPosition({ g_origin.x - g_frame, g_origin.y - g_frame });
     frame.setFillColor(sf::Color(120, 70, 25));
     w.draw(frame);
 
-    // linie interioara (accent)
     sf::RectangleShape innerLine({ boardPx + 2.f * (g_frame - 6.f), boardPx + 2.f * (g_frame - 6.f) });
     innerLine.setPosition({ g_origin.x - (g_frame - 6.f), g_origin.y - (g_frame - 6.f) });
     innerLine.setFillColor(sf::Color::Transparent);
@@ -574,7 +867,7 @@ static void drawFrame(sf::RenderWindow& w) {
 }
 
 /*
-  Desenez tabla 8x8 patrate alternante
+  Desenez tabla 8x8.
 */
 static void drawBoard(sf::RenderWindow& w) {
     sf::RectangleShape sq({ g_tile, g_tile });
@@ -592,11 +885,13 @@ static void drawBoard(sf::RenderWindow& w) {
 }
 
 /*
-  Desenez highlight-urile:
-  - galben pentru destinatiile posibile
-  - albastru pentru patratul selectat
+  Desenez highlight-urile doar in timpul jocului (si doar pentru jucator uman).
 */
 static void drawHighlights(sf::RenderWindow& w) {
+    if (g_phase != PHASE_GAME) return;
+    if (isComputerSide(g_turn)) return;
+    if (!g_fontReady) return;
+
     sf::RectangleShape hl({ g_tile, g_tile });
     hl.setFillColor(sf::Color(255, 215, 0, 110));
 
@@ -616,7 +911,7 @@ static void drawHighlights(sf::RenderWindow& w) {
 }
 
 /*
-  Desenez piesele ca cercuri, cu outline sa se vada bine pe orice patrat
+  Desenez piesele ca cercuri.
 */
 static void drawPieces(sf::RenderWindow& w) {
     float rad = g_tile * 0.38f;
@@ -650,55 +945,183 @@ static void drawPieces(sf::RenderWindow& w) {
     }
 }
 
+
+// ============================================================================
+//  DESENARE: HUD in joc
+// ============================================================================
+
 /*
-  HUD: tura + nume + capturi + piese ramase + timp
-  Daca fontul nu s-a incarcat, nu desenez textul sa nu crape
+  HUD cerut:
+  - sus de tot stanga: timpul total scurs
+  - deasupra tablei: a cui este tura
+  - stanga: status alb (capturi + piese)
+  - dreapta: status negru (capturi + piese)
 */
 static void drawHUD(sf::RenderWindow& w) {
     if (!g_fontReady) return;
+    if (g_phase != PHASE_GAME && g_phase != PHASE_OVER) return;
 
-    int sec = (int)g_gameClock.getElapsedTime().asSeconds();
-    int mm = sec / 60;
-    int ss = sec % 60;
+    // Dimensiuni baza (rama tablei)
+    const float boardPx = g_tile * 8.f;
+    const float frameX = g_origin.x - g_frame;
+    const float frameY = g_origin.y - g_frame;
+    const float frameW = boardPx + 2.f * g_frame;
+    const float frameH = boardPx + 2.f * g_frame;
+
+    // ----------------- PANOU SUS (in rama): tura + timp ramas + timp total -----------------
+
+    const float headerH = 120.f;
+    const float headerGap = 16.f;
+    float headerY = frameY - headerH - headerGap;
+    if (headerY < 12.f) headerY = 12.f;
+
+    sf::RectangleShape headerBg({ frameW, headerH });
+    headerBg.setPosition({ frameX, headerY });
+    headerBg.setFillColor(sf::Color(245, 235, 220));
+    headerBg.setOutlineThickness(4.f);
+    headerBg.setOutlineColor(sf::Color(120, 70, 25));
+    w.draw(headerBg);
+
+    // timpul total scurs (stanga sus in panou) - doar MM:SS
+    {
+        int sec = (int)g_gameClock.getElapsedTime().asSeconds();
+        int mm = sec / 60;
+        int ss = sec % 60;
+        char buf[32];
+        std::snprintf(buf, sizeof(buf), "%02d:%02d", mm, ss);
+        g_hudTime.setString(buf);
+        g_hudTime.setOrigin({ 0.f, 0.f });
+        g_hudTime.setPosition({ frameX + 16.f, headerY + 10.f });
+        w.draw(g_hudTime);
+    }
+
+    // textul cu numele jucatorului care este in tura (centrat deasupra tablei)
+    {
+        const char* whoName = (g_turn == 1) ? g_nameWhite : g_nameBlack;
+        if (whoName[0] == 0) whoName = (g_turn == 1) ? "ALB" : "NEGRU";
+
+        g_hudTurn.setString(whoName);
+
+        auto b = g_hudTurn.getLocalBounds();
+        g_hudTurn.setOrigin({ b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f });
+        g_hudTurn.setPosition({ frameX + frameW * 0.5f, headerY + 44.f });
+        w.draw(g_hudTurn);
+    }
+
+    // timpul ramas sub tura (centrat), fara text de tipul "Ramas:"
+    {
+        char buf[16] = "";
+
+        if (g_useTurnTimer && !isComputerSide(g_turn) && g_turnLimitSeconds > 0) {
+            int used = (int)g_turnClock.getElapsedTime().asSeconds();
+            int left = g_turnLimitSeconds - used;
+            if (left < 0) left = 0;
+            int lm = left / 60;
+            int ls = left % 60;
+            std::snprintf(buf, sizeof(buf), "%02d:%02d", lm, ls);
+        }
+
+        g_hudRemain.setString(buf);
+        if (buf[0] != 0) {
+            auto b = g_hudRemain.getLocalBounds();
+            g_hudRemain.setOrigin({ b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f });
+            g_hudRemain.setPosition({ frameX + frameW * 0.5f, headerY + 86.f });
+            w.draw(g_hudRemain);
+        }
+    }
+
+    // ----------------- PANOURI LATERALE (in rama): alb / negru -----------------
 
     int wPieces = countPieces(1);
     int bPieces = countPieces(2);
 
-    char buf[256];
-    const char* turnName = (g_turn == 1) ? "ALB" : "NEGRU";
+    const float panelW = 280.f;
+    const float panelH = 210.f;
+    const float panelGap = 26.f;
+    const float panelY = frameY + (frameH - panelH) * 0.5f;
 
-    std::snprintf(
-        buf, sizeof(buf),
-        "Tura: %s | %s(ALB) capturi:%d piese:%d  vs  %s(NEGRU) capturi:%d piese:%d | Timp %02d:%02d",
-        turnName,
-        g_nameWhite, g_capturedByWhite, wPieces,
-        g_nameBlack, g_capturedByBlack, bPieces,
-        mm, ss
-    );
+    // panou alb (stanga)
+    {
+        sf::RectangleShape bg({ panelW, panelH });
+        bg.setPosition({ frameX - panelW - panelGap, panelY });
+        bg.setFillColor(sf::Color(245, 235, 220));
+        bg.setOutlineThickness(4.f);
+        bg.setOutlineColor(sf::Color(120, 70, 25));
+        w.draw(bg);
 
-    g_hud.setString(buf);
-    g_hud.setPosition({ g_origin.x - g_frame, g_origin.y - g_frame - 40.f });
-    w.draw(g_hud);
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "ALB\n%s\nPiese: %d\nCapturi: %d",
+            g_nameWhite, wPieces, g_capturedByWhite);
+        g_hudLeft.setString(buf);
+        g_hudLeft.setPosition({ bg.getPosition().x + 16.f, bg.getPosition().y + 14.f });
+        w.draw(g_hudLeft);
+    }
+
+    // panou negru (dreapta)
+    {
+        sf::RectangleShape bg({ panelW, panelH });
+        bg.setPosition({ frameX + frameW + panelGap, panelY });
+        bg.setFillColor(sf::Color(245, 235, 220));
+        bg.setOutlineThickness(4.f);
+        bg.setOutlineColor(sf::Color(120, 70, 25));
+        w.draw(bg);
+
+        char buf[256];
+        std::snprintf(buf, sizeof(buf), "NEGRU\n%s\nPiese: %d\nCapturi: %d",
+            g_nameBlack, bPieces, g_capturedByBlack);
+        g_hudRight.setString(buf);
+        g_hudRight.setPosition({ bg.getPosition().x + 16.f, bg.getPosition().y + 14.f });
+        w.draw(g_hudRight);
+    }
+}
+
+
+// ============================================================================
+//  DESENARE: ecrane setup (mode / nume / optiuni)
+// ============================================================================
+
+/*
+  Desenez un buton simplu (dreptunghi + text), cu highlight cand e activ/hover.
+*/
+static void drawButton(sf::RenderWindow& w, const sf::FloatRect& r, const char* text, bool active, bool hover) {
+    sf::RectangleShape box({ r.size.x, r.size.y });
+    box.setPosition({ r.position.x, r.position.y });
+
+    sf::Color fill(255, 255, 255);
+    if (active) fill = sf::Color(220, 245, 255);
+    if (hover) fill = sf::Color(240, 240, 240);
+    if (active && hover) fill = sf::Color(210, 235, 255);
+
+    box.setFillColor(fill);
+    box.setOutlineThickness(3.f);
+    box.setOutlineColor(active ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    w.draw(box);
+
+    if (!g_fontReady) return;
+    sf::Text t(g_font);
+    t.setCharacterSize(26);
+    t.setFillColor(sf::Color::Black);
+    t.setString(text);
+    t.setPosition({ r.position.x + 18.f, r.position.y + 16.f });
+    w.draw(t);
 }
 
 /*
-  Ecran de introducere nume - un panel peste fundal
+  Ecran: alegerea modului de joc.
 */
-static void drawNameEntry(sf::RenderWindow& w) {
+static void drawModeSelect(sf::RenderWindow& w) {
     if (!g_fontReady) return;
 
     auto sz = w.getSize();
     float W = (float)sz.x;
     float H = (float)sz.y;
 
-    // overlay usor
     sf::RectangleShape dim({ W, H });
     dim.setFillColor(sf::Color(0, 0, 0, 60));
     w.draw(dim);
 
-    // panel
-    sf::RectangleShape panel({ 820.f, 420.f });
-    panel.setPosition({ (W - 820.f) / 2.f, (H - 420.f) / 2.f });
+    sf::RectangleShape panel({ 820.f, 520.f });
+    panel.setPosition({ (W - 820.f) / 2.f, (H - 520.f) / 2.f });
     panel.setFillColor(sf::Color(245, 235, 220));
     panel.setOutlineThickness(4.f);
     panel.setOutlineColor(sf::Color(120, 70, 25));
@@ -707,32 +1130,74 @@ static void drawNameEntry(sf::RenderWindow& w) {
     float px = panel.getPosition().x;
     float py = panel.getPosition().y;
 
-    g_title.setString("Introdu numele jucatorilor");
+    g_title.setString("Alege modul de joc");
     g_title.setPosition({ px + 40.f, py + 30.f });
     w.draw(g_title);
 
-    g_labelWhite.setString("Player 1 (ALB):");
+    sf::FloatRect b1({ px + 40.f, py + 130.f }, { 740.f, 80.f });
+    sf::FloatRect b2({ px + 40.f, py + 230.f }, { 740.f, 80.f });
+    sf::FloatRect b3({ px + 40.f, py + 330.f }, { 740.f, 80.f });
+
+    drawButton(w, b1, "1) Player vs Player", (g_mode == GameMode::PvP), mouseInRect(w, b1));
+    drawButton(w, b2, "2) Player vs Computer", (g_mode == GameMode::PvC), mouseInRect(w, b2));
+    drawButton(w, b3, "3) Computer vs Computer", (g_mode == GameMode::CvC), mouseInRect(w, b3));
+
+    g_hint.setString("Click pe un mod sau tastele 1/2/3. ENTER continua. ESC meniu");
+    g_hint.setPosition({ px + 40.f, py + 440.f });
+    w.draw(g_hint);
+}
+
+/*
+  Ecran: introducere nume.
+  Daca un jucator este computer, campul este blocat.
+*/
+static void drawNameEntry(sf::RenderWindow& w) {
+    if (!g_fontReady) return;
+
+    auto sz = w.getSize();
+    float W = (float)sz.x;
+    float H = (float)sz.y;
+
+    sf::RectangleShape dim({ W, H });
+    dim.setFillColor(sf::Color(0, 0, 0, 60));
+    w.draw(dim);
+
+    sf::RectangleShape panel({ 820.f, 440.f });
+    panel.setPosition({ (W - 820.f) / 2.f, (H - 440.f) / 2.f });
+    panel.setFillColor(sf::Color(245, 235, 220));
+    panel.setOutlineThickness(4.f);
+    panel.setOutlineColor(sf::Color(120, 70, 25));
+    w.draw(panel);
+
+    float px = panel.getPosition().x;
+    float py = panel.getPosition().y;
+
+    g_title.setString("Introdu numele");
+    g_title.setPosition({ px + 40.f, py + 30.f });
+    w.draw(g_title);
+
+    g_labelWhite.setString("ALB:");
     g_labelWhite.setPosition({ px + 40.f, py + 120.f });
     w.draw(g_labelWhite);
 
-    g_labelBlack.setString("Player 2 (NEGRU):");
+    g_labelBlack.setString("NEGRU:");
     g_labelBlack.setPosition({ px + 40.f, py + 230.f });
     w.draw(g_labelBlack);
 
-    // box input alb
     sf::RectangleShape box1({ 740.f, 60.f });
     box1.setPosition({ px + 40.f, py + 155.f });
-    box1.setFillColor(sf::Color::White);
+    box1.setFillColor(g_isComputerWhite ? sf::Color(240, 240, 240) : sf::Color::White);
     box1.setOutlineThickness(3.f);
-    box1.setOutlineColor(g_activeName == 0 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    if (g_isComputerWhite) box1.setOutlineColor(sf::Color(170, 170, 170));
+    else box1.setOutlineColor(g_activeName == 0 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
     w.draw(box1);
 
-    // box input negru
     sf::RectangleShape box2({ 740.f, 60.f });
     box2.setPosition({ px + 40.f, py + 265.f });
-    box2.setFillColor(sf::Color::White);
+    box2.setFillColor(g_isComputerBlack ? sf::Color(240, 240, 240) : sf::Color::White);
     box2.setOutlineThickness(3.f);
-    box2.setOutlineColor(g_activeName == 1 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    if (g_isComputerBlack) box2.setOutlineColor(sf::Color(170, 170, 170));
+    else box2.setOutlineColor(g_activeName == 1 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
     w.draw(box2);
 
     g_nameTextWhite.setString(g_nameWhite);
@@ -744,26 +1209,133 @@ static void drawNameEntry(sf::RenderWindow& w) {
     w.draw(g_nameTextBlack);
 
     // cursor simplu (linie) la finalul campului activ
-    sf::RectangleShape caret({ 2.f, 32.f });
-    caret.setFillColor(sf::Color::Black);
+    if (g_activeName >= 0) {
+        sf::RectangleShape caret({ 2.f, 32.f });
+        caret.setFillColor(sf::Color::Black);
 
-    if (g_activeName == 0) {
-        auto b = g_nameTextWhite.getLocalBounds(); // SFML 3: FloatRect are .size
-        caret.setPosition({ g_nameTextWhite.getPosition().x + b.size.x + 6.f,
-                            g_nameTextWhite.getPosition().y + 6.f });
-        w.draw(caret);
-    }
-    else {
-        auto b = g_nameTextBlack.getLocalBounds();
-        caret.setPosition({ g_nameTextBlack.getPosition().x + b.size.x + 6.f,
-                            g_nameTextBlack.getPosition().y + 6.f });
-        w.draw(caret);
+        if (g_activeName == 0 && !g_isComputerWhite) {
+            auto b = g_nameTextWhite.getLocalBounds();
+            caret.setPosition({ g_nameTextWhite.getPosition().x + b.size.x + 6.f,
+                                g_nameTextWhite.getPosition().y + 6.f });
+            w.draw(caret);
+        }
+        else if (g_activeName == 1 && !g_isComputerBlack) {
+            auto b = g_nameTextBlack.getLocalBounds();
+            caret.setPosition({ g_nameTextBlack.getPosition().x + b.size.x + 6.f,
+                                g_nameTextBlack.getPosition().y + 6.f });
+            w.draw(caret);
+        }
     }
 
-    g_hint.setString("Taste: scrie nume, TAB schimba campul, ENTER continua, BACKSPACE sterge, ESC meniu");
-    g_hint.setPosition({ px + 40.f, py + 350.f });
+    g_hint.setString("Taste: scrie nume, TAB schimba campul, ENTER continua, BACKSPACE sterge, B inapoi, ESC meniu");
+    g_hint.setPosition({ px + 40.f, py + 360.f });
     w.draw(g_hint);
 }
+
+/*
+  Ecran: optiuni (timer + dificultati computer).
+*/
+static void drawOptions(sf::RenderWindow& w) {
+    if (!g_fontReady) return;
+
+    auto sz = w.getSize();
+    float W = (float)sz.x;
+    float H = (float)sz.y;
+
+    sf::RectangleShape dim({ W, H });
+    dim.setFillColor(sf::Color(0, 0, 0, 60));
+    w.draw(dim);
+
+    sf::RectangleShape panel({ 920.f, 560.f });
+    panel.setPosition({ (W - 920.f) / 2.f, (H - 560.f) / 2.f });
+    panel.setFillColor(sf::Color(245, 235, 220));
+    panel.setOutlineThickness(4.f);
+    panel.setOutlineColor(sf::Color(120, 70, 25));
+    w.draw(panel);
+
+    float px = panel.getPosition().x;
+    float py = panel.getPosition().y;
+
+    g_title.setString("Optiuni joc");
+    g_title.setPosition({ px + 40.f, py + 30.f });
+    w.draw(g_title);
+
+    // timer toggle
+    sf::FloatRect timerBtn({ px + 40.f, py + 120.f }, { 360.f, 70.f });
+    drawButton(w, timerBtn, g_useTurnTimer ? "Timer pe tura: ON" : "Timer pe tura: OFF", g_useTurnTimer, mouseInRect(w, timerBtn));
+
+    // time box
+    sf::FloatRect timeBox({ px + 420.f, py + 120.f }, { 220.f, 70.f });
+    sf::RectangleShape tb({ timeBox.size.x, timeBox.size.y });
+    tb.setPosition({ timeBox.position.x, timeBox.position.y });
+    tb.setFillColor(g_useTurnTimer ? sf::Color::White : sf::Color(240, 240, 240));
+    tb.setOutlineThickness(3.f);
+    tb.setOutlineColor(g_editTurnTime ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    w.draw(tb);
+
+    sf::Text tTime(g_font);
+    tTime.setCharacterSize(30);
+    tTime.setFillColor(sf::Color::Black);
+    tTime.setString(g_turnTimeStr);
+    tTime.setPosition({ timeBox.position.x + 32.f, timeBox.position.y + 16.f });
+    w.draw(tTime);
+
+    // caret in box de timp
+    if (g_editTurnTime) {
+        // pozitionare simpla: fiecare caracter are latime aproximativa
+        // nu fac masuratori perfecte ca sa ramana simplu
+        float baseX = tTime.getPosition().x;
+        float baseY = tTime.getPosition().y;
+
+        int cursorPos = g_turnTimeCursor;
+        float dx = 0.f;
+        if (cursorPos == 0) dx = 0.f;
+        else if (cursorPos == 1) dx = 18.f;
+        else if (cursorPos == 3) dx = 18.f * 3.f;
+        else if (cursorPos == 4) dx = 18.f * 4.f;
+
+        sf::RectangleShape caret({ 2.f, 34.f });
+        caret.setFillColor(sf::Color::Black);
+        caret.setPosition({ baseX + dx + 2.f, baseY + 2.f });
+        w.draw(caret);
+    }
+
+    // dificultati computer
+    float y = py + 220.f;
+
+    if (g_isComputerWhite) {
+        sf::FloatRect dW({ px + 40.f, y }, { 600.f, 70.f });
+        const char* label = (g_diffWhite == Difficulty::Easy)
+            ? "Computer Alb: Easy"
+            : "Computer Alb: Hard";
+        drawButton(w, dW, label, true, mouseInRect(w, dW));
+        y += 90.f;
+    }
+
+    if (g_isComputerBlack) {
+        sf::FloatRect dB({ px + 40.f, y }, { 600.f, 70.f });
+        const char* label = (g_diffBlack == Difficulty::Easy)
+            ? "Computer Negru: Easy"
+            : "Computer Negru: Hard";
+        drawButton(w, dB, label, true, mouseInRect(w, dB));
+        y += 90.f;
+    }
+
+    // butoane Start / Back
+    sf::FloatRect backBtn({ px + 40.f, py + 460.f }, { 220.f, 70.f });
+    sf::FloatRect startBtn({ px + 660.f, py + 460.f }, { 220.f, 70.f });
+    drawButton(w, backBtn, "B) Inapoi", false, mouseInRect(w, backBtn));
+    drawButton(w, startBtn, "ENTER) Start", true, mouseInRect(w, startBtn));
+
+    g_hint.setString("Click pe optiuni. ENTER Start. B inapoi. ESC meniu");
+    g_hint.setPosition({ px + 40.f, py + 540.f - 30.f });
+    w.draw(g_hint);
+}
+
+
+// ============================================================================
+//  DESENARE: final
+// ============================================================================
 
 /*
   Desenez confetti.
@@ -781,7 +1353,6 @@ static void drawConfetti(sf::RenderWindow& w) {
         float x = g_confPos[i].x + g_confVel[i].x * t;
         float y = g_confPos[i].y + g_confVel[i].y * t;
 
-        // un wrap simplu ca sa nu dispara complet
         while (x < -20.f) x += (W + 40.f);
         while (x > W + 20.f) x -= (W + 40.f);
         while (y > H + 20.f) y -= (H + 60.f);
@@ -789,53 +1360,14 @@ static void drawConfetti(sf::RenderWindow& w) {
         float s = g_confSize[i];
         piece.setSize({ s, s });
         piece.setPosition({ x, y });
-
-        // SFML 3: trebuie sf::Angle
         piece.setRotation(sf::degrees(t * 120.f + i * 7.f));
 
         sf::Color col((std::uint8_t)((i * 50) % 255),
             (std::uint8_t)((i * 90) % 255),
             (std::uint8_t)((i * 140) % 255), 220);
         piece.setFillColor(col);
-
         w.draw(piece);
     }
-}
-
-/*
-  Trofeu simplu din forme (ca sa para mai "festiv").
-*/
-static void drawTrophy(sf::RenderWindow& w, sf::Vector2f center) {
-    sf::ConvexShape cup(6);
-    cup.setPoint(0, { -90.f, -80.f });
-    cup.setPoint(1, { 90.f, -80.f });
-    cup.setPoint(2, { 60.f,  10.f });
-    cup.setPoint(3, { 20.f,  45.f });
-    cup.setPoint(4, { -20.f,  45.f });
-    cup.setPoint(5, { -60.f,  10.f });
-    cup.setPosition(center);
-    cup.setFillColor(sf::Color(255, 215, 0, 230));
-    w.draw(cup);
-
-    sf::CircleShape h1(18.f);
-    h1.setFillColor(sf::Color(255, 215, 0, 200));
-    h1.setPosition({ center.x - 130.f, center.y - 55.f });
-    w.draw(h1);
-
-    sf::CircleShape h2(18.f);
-    h2.setFillColor(sf::Color(255, 215, 0, 200));
-    h2.setPosition({ center.x + 94.f, center.y - 55.f });
-    w.draw(h2);
-
-    sf::RectangleShape base({ 180.f, 22.f });
-    base.setFillColor(sf::Color(120, 70, 25, 230));
-    base.setPosition({ center.x - 90.f, center.y + 70.f });
-    w.draw(base);
-
-    sf::RectangleShape base2({ 110.f, 26.f });
-    base2.setFillColor(sf::Color(90, 50, 18, 230));
-    base2.setPosition({ center.x - 55.f, center.y + 44.f });
-    w.draw(base2);
 }
 
 /*
@@ -854,8 +1386,8 @@ static void drawGameOver(sf::RenderWindow& w) {
 
     drawConfetti(w);
 
-    sf::RectangleShape banner({ 900.f, 320.f });
-    banner.setPosition({ (W - 900.f) / 2.f, (H - 320.f) / 2.f });
+    sf::RectangleShape banner({ 900.f, 360.f });
+    banner.setPosition({ (W - 900.f) / 2.f, (H - 360.f) / 2.f });
     banner.setFillColor(sf::Color(20, 20, 20, 220));
     banner.setOutlineThickness(4.f);
     banner.setOutlineColor(sf::Color(255, 215, 0, 220));
@@ -883,11 +1415,17 @@ static void drawGameOver(sf::RenderWindow& w) {
     g_overWinner.setPosition({ bx + 40.f, by + 95.f });
     w.draw(g_overWinner);
 
-    g_overHint.setString("R = rematch | ENTER = schimba nume | ESC = meniu");
-    g_overHint.setPosition({ bx + 40.f, by + 260.f });
-    w.draw(g_overHint);
+    if (g_overReason[0] != 0) {
+        char rbuf[128];
+        std::snprintf(rbuf, sizeof(rbuf), "Motiv: %s", g_overReason);
+        g_overReasonText.setString(rbuf);
+        g_overReasonText.setPosition({ bx + 40.f, by + 175.f });
+        w.draw(g_overReasonText);
+    }
 
-    drawTrophy(w, { bx + 760.f, by + 150.f });
+    g_overHint.setString("R = rematch | ENTER = setup | ESC = meniu");
+    g_overHint.setPosition({ bx + 40.f, by + 310.f });
+    w.draw(g_overHint);
 }
 
 
@@ -895,36 +1433,41 @@ static void drawGameOver(sf::RenderWindow& w) {
 //  FUNCTII PUBLICE (apelate din main.cpp)
 // ============================================================================
 
+// variabila globala din proiect (interfata 1=meniu, 2=play)
+extern int interfata;
+
 /*
   Initializare modul Play:
   - incarc fontul o singura data
   - setez stilurile textelor
-  - pornesc in ecranul de nume
+  - pornesc in ecranul de alegere mod
 */
 void Play_Init() {
     if (!g_fontReady) {
         g_fontReady = g_font.openFromFile("Themes/Kanit-Medium.ttf");
         setupTextStyles();
     }
-    resetAllToNameEntry();
+    resetAllToModeSelect();
 }
 
 /*
-  Reset cand intri in Play (de obicei imediat dupa ce apesi Play din meniu).
+  Reset cand intri in Play (dupa ce apesi Play din meniu).
 */
 void Play_Reset() {
-    resetAllToNameEntry();
+    resetAllToModeSelect();
 }
 
 /*
   Handler de evenimente:
   - ESC: inapoi la meniu
-  - In phase 0: scriu nume (TextEntered), TAB schimba campul, ENTER continua
-  - In phase 1: click pentru select/move, R pentru rematch cu aceleasi nume
-  - In phase 2: R rematch, ENTER inapoi la nume
+  - PHASE_MODE: click / 1/2/3 pentru mod, ENTER continua
+  - PHASE_NAMES: scrie nume (doar umani), TAB, BACKSPACE, ENTER, B inapoi
+  - PHASE_OPTIONS: click toggle, edit timp MM:SS, ENTER start, B inapoi
+  - PHASE_GAME: click mutare (doar daca e tura unui om), R rematch
+  - PHASE_OVER: R rematch, ENTER setup
 */
 void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
-    // ESC merge in orice faza: ies din play
+    // ESC merge in orice faza
     if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
         if (k->code == sf::Keyboard::Key::Escape) {
             audio.playClick();
@@ -935,32 +1478,90 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
         }
     }
 
-    // ------------------- FAZA 0: NUME -------------------
-    if (g_phase == 0) {
+    // ------------------- PHASE_MODE -------------------
+    if (g_phase == PHASE_MODE) {
         if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
-            if (k->code == sf::Keyboard::Key::Tab) {
-                audio.playClick();
-                g_activeName = 1 - g_activeName;
-                return;
-            }
-            if (k->code == sf::Keyboard::Key::Backspace) {
-                audio.playClick();
-                backspaceName(g_activeName);
-                return;
-            }
+            if (k->code == sf::Keyboard::Key::Num1) { audio.playClick(); applyModeAndPrepareNames(GameMode::PvP); return; }
+            if (k->code == sf::Keyboard::Key::Num2) { audio.playClick(); applyModeAndPrepareNames(GameMode::PvC); return; }
+            if (k->code == sf::Keyboard::Key::Num3) { audio.playClick(); applyModeAndPrepareNames(GameMode::CvC); return; }
             if (k->code == sf::Keyboard::Key::Enter) {
                 audio.playClick();
-                // prima apasare ENTER -> trec la campul 2, a doua -> incep jocul
-                if (g_activeName == 0) g_activeName = 1;
-                else startGameFromNames();
+                // daca nu s-a selectat nimic explicit, raman PvP
+                applyModeAndPrepareNames(g_mode);
+                g_phase = PHASE_NAMES;
                 return;
             }
         }
 
-        // TextEntered: ia caracterele scrise
+        if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mb->button != sf::Mouse::Button::Left) return;
+            audio.playClick();
+
+            auto sz = w.getSize();
+            float W = (float)sz.x;
+            float H = (float)sz.y;
+            float px = (W - 820.f) / 2.f;
+            float py = (H - 520.f) / 2.f;
+
+            sf::FloatRect b1({ px + 40.f, py + 130.f }, { 740.f, 80.f });
+            sf::FloatRect b2({ px + 40.f, py + 230.f }, { 740.f, 80.f });
+            sf::FloatRect b3({ px + 40.f, py + 330.f }, { 740.f, 80.f });
+
+            if (mouseInRect(w, b1)) { applyModeAndPrepareNames(GameMode::PvP); g_phase = PHASE_NAMES; return; }
+            if (mouseInRect(w, b2)) { applyModeAndPrepareNames(GameMode::PvC); g_phase = PHASE_NAMES; return; }
+            if (mouseInRect(w, b3)) { applyModeAndPrepareNames(GameMode::CvC); g_phase = PHASE_NAMES; return; }
+        }
+
+        return;
+    }
+
+    // ------------------- PHASE_NAMES -------------------
+    if (g_phase == PHASE_NAMES) {
+        if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
+            if (k->code == sf::Keyboard::Key::B) {
+                audio.playClick();
+                g_phase = PHASE_MODE;
+                return;
+            }
+            if (k->code == sf::Keyboard::Key::Tab) {
+                audio.playClick();
+                if (g_activeName >= 0) g_activeName = nextEditableNameField(g_activeName);
+                return;
+            }
+            if (k->code == sf::Keyboard::Key::Backspace) {
+                audio.playClick();
+                if (g_activeName >= 0) backspaceName(g_activeName);
+                return;
+            }
+            if (k->code == sf::Keyboard::Key::Enter) {
+                audio.playClick();
+
+                // In modul Player vs Player am doua campuri editabile.
+                // Vreau ca ENTER sa treaca de la ALB la NEGRU, iar apoi sa porneasca ecranul de optiuni.
+                // In modurile unde exista un singur jucator uman, ENTER duce direct la optiuni.
+                if (g_activeName == 0) {
+                    if (!g_isComputerBlack) {
+                        g_activeName = 1;
+                        return;
+                    }
+                    goToOptionsFromNames();
+                    return;
+                }
+
+                if (g_activeName == 1) {
+                    goToOptionsFromNames();
+                    return;
+                }
+
+                // Daca nu am camp editabil (Computer vs Computer), trec direct mai departe.
+                goToOptionsFromNames();
+                return;
+            }
+        }
+
         if (const auto* te = e.getIf<sf::Event::TextEntered>()) {
+            if (g_activeName < 0) return;
             char32_t u = te->unicode;
-            // accepta doar ASCII simplu
             if (u >= 32 && u <= 126) {
                 char ch = (char)u;
                 if (ch != '|' && ch != '\n' && ch != '\r' && ch != '\t') {
@@ -974,70 +1575,207 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
         return;
     }
 
-    // ------------------- FAZA 2: FINAL -------------------
-    if (g_phase == 2) {
+    // ------------------- PHASE_OPTIONS -------------------
+    if (g_phase == PHASE_OPTIONS) {
         if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
-            if (k->code == sf::Keyboard::Key::R) {
+            if (k->code == sf::Keyboard::Key::B) {
                 audio.playClick();
-                resetMatchKeepNames();
-                g_phase = 1;
+                g_phase = PHASE_NAMES;
                 return;
             }
             if (k->code == sf::Keyboard::Key::Enter) {
                 audio.playClick();
-                resetAllToNameEntry();
+                startGameFromOptions();
+                return;
+            }
+            if (k->code == sf::Keyboard::Key::Backspace) {
+                if (g_editTurnTime) {
+                    audio.playClick();
+                    // backspace in edit timp: mut cursor inapoi si pun 0
+                    if (g_turnTimeCursor == 4) g_turnTimeCursor = 3;
+                    else if (g_turnTimeCursor == 3) g_turnTimeCursor = 1;
+                    else if (g_turnTimeCursor == 1) g_turnTimeCursor = 0;
+                    else g_turnTimeCursor = 0;
+
+                    if (g_turnTimeCursor == 0 || g_turnTimeCursor == 1 || g_turnTimeCursor == 3 || g_turnTimeCursor == 4) {
+                        g_turnTimeStr[g_turnTimeCursor] = '0';
+                    }
+                    return;
+                }
+            }
+        }
+
+        if (const auto* te = e.getIf<sf::Event::TextEntered>()) {
+            if (!g_editTurnTime) return;
+            if (!g_useTurnTimer) return;
+
+            char32_t u = te->unicode;
+            if (u >= '0' && u <= '9') {
+                audio.playKey();
+                g_turnTimeStr[g_turnTimeCursor] = (char)u;
+
+                // avans cursor: 0->1->3->4->0...
+                if (g_turnTimeCursor == 0) g_turnTimeCursor = 1;
+                else if (g_turnTimeCursor == 1) g_turnTimeCursor = 3;
+                else if (g_turnTimeCursor == 3) g_turnTimeCursor = 4;
+                else g_turnTimeCursor = 0;
+            }
+            return;
+        }
+
+        if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mb->button != sf::Mouse::Button::Left) return;
+            audio.playClick();
+
+            auto sz = w.getSize();
+            float W = (float)sz.x;
+            float H = (float)sz.y;
+            float px = (W - 920.f) / 2.f;
+            float py = (H - 560.f) / 2.f;
+
+            sf::FloatRect timerBtn({ px + 40.f, py + 120.f }, { 360.f, 70.f });
+            sf::FloatRect timeBox({ px + 420.f, py + 120.f }, { 220.f, 70.f });
+
+            float y = py + 220.f;
+            sf::FloatRect dW({ px + 40.f, y }, { 600.f, 70.f });
+            if (g_isComputerWhite) y += 90.f;
+            sf::FloatRect dB({ px + 40.f, y }, { 600.f, 70.f });
+
+            sf::FloatRect backBtn({ px + 40.f, py + 460.f }, { 220.f, 70.f });
+            sf::FloatRect startBtn({ px + 660.f, py + 460.f }, { 220.f, 70.f });
+
+            if (mouseInRect(w, timerBtn)) {
+                g_useTurnTimer = !g_useTurnTimer;
+                if (!g_useTurnTimer) g_editTurnTime = false;
+                return;
+            }
+
+            if (mouseInRect(w, timeBox)) {
+                if (g_useTurnTimer) {
+                    g_editTurnTime = true;
+                    g_turnTimeCursor = 0;
+                }
+                return;
+            }
+
+            if (g_isComputerWhite && mouseInRect(w, dW)) {
+                g_diffWhite = (g_diffWhite == Difficulty::Easy) ? Difficulty::Hard : Difficulty::Easy;
+                return;
+            }
+
+            if (g_isComputerBlack && mouseInRect(w, dB)) {
+                g_diffBlack = (g_diffBlack == Difficulty::Easy) ? Difficulty::Hard : Difficulty::Easy;
+                return;
+            }
+
+            if (mouseInRect(w, backBtn)) {
+                g_phase = PHASE_NAMES;
+                return;
+            }
+            if (mouseInRect(w, startBtn)) {
+                startGameFromOptions();
+                return;
+            }
+
+            // click in afara timeBox -> ies din edit
+            g_editTurnTime = false;
+        }
+
+        return;
+    }
+
+    // ------------------- PHASE_OVER -------------------
+    if (g_phase == PHASE_OVER) {
+        if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
+            if (k->code == sf::Keyboard::Key::R) {
+                audio.playClick();
+                resetMatchKeepNames();
+                g_phase = PHASE_GAME;
+                return;
+            }
+            if (k->code == sf::Keyboard::Key::Enter) {
+                audio.playClick();
+                resetAllToModeSelect();
                 return;
             }
         }
         return;
     }
 
-    // ------------------- FAZA 1: JOC -------------------
-    if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
-        if (k->code == sf::Keyboard::Key::R) {
-            resetMatchKeepNames();
-            return;
-        }
-    }
-
-    if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
-        audio.playClick();
-        if (mb->button != sf::Mouse::Button::Left) return;
-
-        updateLayout(w);
-
-        int r, c;
-        if (!mouseToCell(w, r, c)) {
-            g_hasSel = false;
-            g_moveCount = 0;
-            return;
+    // ------------------- PHASE_GAME -------------------
+    if (g_phase == PHASE_GAME) {
+        if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
+            if (k->code == sf::Keyboard::Key::R) {
+                audio.playClick();
+                resetMatchKeepNames();
+                return;
+            }
         }
 
-        clickCellInGame(r, c, w);
+        if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mb->button != sf::Mouse::Button::Left) return;
+
+            // daca e tura computerului, ignor click
+            if (isComputerSide(g_turn)) return;
+
+            audio.playClick();
+            updateLayout(w);
+
+            int r, c;
+            if (!mouseToCell(w, r, c)) {
+                g_hasSel = false;
+                g_moveCount = 0;
+                return;
+            }
+
+            clickCellInGame(r, c, w);
+        }
+        return;
     }
 }
 
 /*
   Functia de desen:
-  - In phase 0: desenez panelul de nume
-  - In phase 1: desenez rama + tabla + piese + HUD
-  - In phase 2: peste joc desenez overlay-ul de final
+  - in setup (mode/nume/optiuni) desenez tabla ca fundal + overlay
+  - in joc desenez tabla + highlight + HUD
+  - in final desenez overlay-ul de final peste joc
 */
 void Play_Draw(sf::RenderWindow& w) {
     updateLayout(w);
 
-    if (g_phase == 0) {
-        drawNameEntry(w);
-        return;
-    }
+    // update automatizari (time out + mutari computer)
+    updateGameAutomations(w);
 
+    // fundal comun: tabla
     drawFrame(w);
     drawBoard(w);
     drawHighlights(w);
     drawPieces(w);
-    drawHUD(w);
 
-    if (g_phase == 2) {
+    if (g_phase == PHASE_MODE) {
+        drawModeSelect(w);
+        return;
+    }
+
+    if (g_phase == PHASE_NAMES) {
+        drawNameEntry(w);
+        return;
+    }
+
+    if (g_phase == PHASE_OPTIONS) {
+        drawOptions(w);
+        return;
+    }
+
+    if (g_phase == PHASE_GAME) {
+        drawHUD(w);
+        return;
+    }
+
+    if (g_phase == PHASE_OVER) {
+        // in spate ramane tabla, iar deasupra overlay final
+        drawHUD(w);
         drawGameOver(w);
+        return;
     }
 }

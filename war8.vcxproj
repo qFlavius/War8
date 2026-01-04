@@ -131,11 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AI\AIPlayer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PlayScreen\PlayScreen.cpp" />
     <ClCompile Include="Themes\themesRead.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AI\AIPlayer.hpp" />
+    <ClInclude Include="GameConfig.hpp" />
     <ClInclude Include="globalVar.hpp" />
     <ClInclude Include="LeaderBoard\leaderboard.hpp" />
     <ClInclude Include="Learn\learn.hpp" />

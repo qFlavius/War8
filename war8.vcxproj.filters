@@ -40,6 +40,9 @@
     <Filter Include="Header Files\Profiles">
       <UniqueIdentifier>{954147f5-97d7-4aa6-8498-639429fee04e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AI">
+      <UniqueIdentifier>{50a58f3a-ac54-4932-904c-657f07ce0870}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -50,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="Themes\themesRead.cpp">
       <Filter>Header Files\Themes</Filter>
+    </ClCompile>
+    <ClCompile Include="AI\AIPlayer.cpp">
+      <Filter>AI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="SoundEffects\SoundEffects.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameConfig.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AI\AIPlayer.hpp">
+      <Filter>AI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
