@@ -31,7 +31,7 @@ static void ensureSeeded() {
 }
 
 /*
-  Intoarce urmatorul numar pseudo-aleator folosind un "generator liniar congruential".
+  Intoarce urmatorul numar pseudo-aleator folosind un "generator liniar congruential"
 
   Formula generala (matematica) este:
       X_{n+1} = (a * X_n + c) mod m
@@ -174,7 +174,7 @@ static void applyMove(std::uint8_t b[8][8],
 }
 
 /*
-  Distanta simpla fata de zona centrala (folosita ca bonus).
+  Distanta simpla fata de zona centrala (folosita ca bonus)
 */
 static int centerDist(int r, int c) {
     int dr = (r < 4) ? (3 - r) : (r - 4);

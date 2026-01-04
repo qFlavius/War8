@@ -1,12 +1,6 @@
 #ifndef WAR8_GAMECONFIG_HPP
 #define WAR8_GAMECONFIG_HPP
-
 #include <string>
-
-/*
-  Tipuri simple pentru configurarea jocului.
-  Folosesc doar enum-uri si struct-uri, fara clase.
-*/
 
 enum class GameMode {
     PvP, // Player vs Player

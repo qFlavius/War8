@@ -3,16 +3,12 @@
 #include <cstdint>
 #include <cstdio>                // snprintf
 #include <SFML/System/Angle.hpp> // sf::degrees (SFML 3)
-
 #include "../SoundEffects/SoundEffects.hpp"
-
-// fisiere noi din proiect (config + inteligenta artificiala)
 #include "../GameConfig.hpp"
 #include "../AI/AIPlayer.hpp"
 
 // ============================================================================
 //  PLAYSCREEN
-//  - Nu folosesc clase proprii, doar variabile globale + functii.
 //  - Fluxul in Play:
 //      0) Aleg modul de joc (Player vs Player / Player vs Computer / Computer vs Computer)
 //      1) Introduc numele (doar pentru jucatorii umani)
@@ -20,7 +16,7 @@
 //      3) Jocul propriu-zis
 //      4) Final: afisez castigatorul + efecte grafice
 //
-//  Reguli implementate (aceleasi ca in varianta ta initiala):
+//  Reguli implementate:
 //  - Mutare: 1 pas pe diagonala intr-o celula libera.
 //  - Dupa un prag de mutari (captureAfterPly), elimin automat piesele blocate
 //    (adica fara mutari legale). Asta este captura prin blocare.
