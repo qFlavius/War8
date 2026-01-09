@@ -430,23 +430,35 @@ struct GameThemes {
             txt.setOrigin({
                 textRect.position.x + textRect.size.x / 2.0f,
                 textRect.position.y + textRect.size.y / 2.0f
-            });
+                });
             txt.setPosition({
                 popupBG.getOrigin().x / 2,
                 popupBG.getPosition().y - popupBG.getOrigin().y + 80.f * (i + 1.f)
-            });
+                });
             popUpTxt.push_back(txt);
 
             sf::CircleShape color;
             color.setRadius(30.f);
+
+            sf::Color currentColor;
             if (i < themeColors.size()) {
-                color.setFillColor(themeColors[i]);
+                currentColor = themeColors[i];
             }
             else {
-                color.setFillColor(sf::Color::Magenta);
+                currentColor = sf::Color::Magenta;
             }
+            color.setFillColor(currentColor);
+
+            float luminance = (0.299f * currentColor.r) + (0.587f * currentColor.g) + (0.114f * currentColor.b);
             color.setOutlineThickness(3.f);
-            color.setOutlineColor(sf::Color::Black);
+
+            if (luminance > 140.f) {
+                color.setOutlineColor(sf::Color::Black);
+            }
+            else {
+                color.setOutlineColor(sf::Color::White);
+            }
+
             r = color.getRadius(); color.setOrigin({ r, r });
             color.setPosition({ txt.getPosition().x + 250.f, txt.getPosition().y });
             SetColors.push_back(color);
@@ -472,12 +484,24 @@ struct GameThemes {
         float i = 0;
         for (const auto& color2 : PickColorsOptions) {
             sf::CircleShape color;
-            color.setRadius(30.f); color.setFillColor(color2);
-            r = color.getRadius(); color.setOrigin({ r, r });
-            color.setPosition({ 
+            color.setRadius(30.f);
+            color.setFillColor(color2);
+
+            float luminance = (0.299f * color2.r) + (0.587f * color2.g) + (0.114f * color2.b);
+            color.setOutlineThickness(3.f);
+            if (luminance > 140.f) {
+                color.setOutlineColor(sf::Color::Black);
+            }
+            else {
+                color.setOutlineColor(sf::Color::White);
+            }
+
+            r = color.getRadius();
+            color.setOrigin({ r, r });
+            color.setPosition({
                 popupBG.getOrigin().x / 2 + i * 87.f,
                 popupBG.getPosition().y - popupBG.getOrigin().y
-            });
+                });
             PickColors.push_back(color);
             i++;
         }

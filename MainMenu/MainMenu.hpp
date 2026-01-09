@@ -58,7 +58,7 @@ struct GameMenu { // struct - alternativa pentru class
 
         labels = {
             "Razboi in 8", "", "Play", "Learn", "Stats",
-            "Leaderboard", "Profiles", "", "Themes", "Settings"
+            "Leaderboard", "", "", "Themes", "Settings"
         };
 
         float btnWidth = 543.f;
@@ -148,10 +148,6 @@ struct GameMenu { // struct - alternativa pentru class
                         else if (labels[i] == "Leaderboard") {
                             audio.playClick();
                             interfata = 5;
-                        }
-                        else if (labels[i] == "Profiles") {
-                            audio.playClick();
-                            interfata = 6;
                         }
                         else if (labels[i] == "Themes") {
                             audio.playClick();

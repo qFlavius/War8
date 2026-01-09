@@ -75,9 +75,6 @@ int main()
             else if (interfata == 5) {
                 leaderboard.handleInput(*event, window);
             }
-            else if (interfata == 6) {
-                profiles.handleInput(*event, window);
-            }
             else if (interfata == 7) {
                 themePage.handleInput(*event, window);
             }
@@ -108,9 +105,6 @@ int main()
         }
         else if (interfata == 5) {
             leaderboard.draw(window);
-        }
-        else if (interfata == 6) {
-            profiles.draw(window);
         }
         else if (interfata == 7) {
             themePage.draw(window);
