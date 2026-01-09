@@ -1,6 +1,12 @@
 #pragma once
+#include <SFML/Audio.hpp>
 
 extern int interfata;
+extern std::string Music;
+extern std::string soundEffects;
+extern std::string fps;
+
+extern sf::Music bgMusic;
 
 //inline - copiaza functia si o pune in main -> Timp de executie mai mic
 inline void CenterText(sf::Text& text, const sf::RectangleShape& rect) {

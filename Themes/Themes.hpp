@@ -56,7 +56,7 @@ struct GameThemes {
         themeName_4(font), selectBtn_4(font),
         themeName_5(font), selectBtn_5(font)
     {
-        if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
+        if (!font.openFromFile("Themes/Inter_18pt-Bold.ttf")) {
             std::cerr << "Error loading font" << std::endl;
         }
         if (!SavedIconT.loadFromFile("Themes/selected.png")) {

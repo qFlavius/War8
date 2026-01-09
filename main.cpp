@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 
 #include "globalVar.hpp"
@@ -17,11 +18,27 @@
 
 // variabila globala folosita in tot proiectul
 int interfata = 1;
+std::string Music = "";
+std::string soundEffects = "";
+std::string fps = "";
+sf::Music bgMusic;
 
 int main()
 {
     LoadPlayerData();
-    Themes(); // initializeaza culorile (color_bg, etc.)
+    Themes();
+
+    if (!bgMusic.openFromFile("Themes/song.mp3")) {
+        std::cerr << "Error loading Themes/song.mp3" << std::endl;
+    }
+    else {
+        bgMusic.setLooping(true);
+        bgMusic.setVolume(30.f);
+
+        if (Music == "ON") {
+            bgMusic.play();
+        }
+    }
 
     sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), "Razboi in 8");
     window.setFramerateLimit(60);
@@ -39,6 +56,8 @@ int main()
         if (s == 0) s = 1;
         AI_Seed(s);
     }
+
+
 
     GameMenu menu;
     GameThemes themePage;
@@ -69,9 +88,6 @@ int main()
             else if (interfata == 3) {
                 learn.handleInput(*event, window);
             }
-            else if (interfata == 4) {
-                stats.handleInput(*event, window);
-            }
             else if (interfata == 5) {
                 leaderboard.handleInput(*event, window);
             }
@@ -99,9 +115,6 @@ int main()
         }
         else if (interfata == 3) {
             learn.draw(window);
-        }
-        else if (interfata == 4) {
-            stats.draw(window);
         }
         else if (interfata == 5) {
             leaderboard.draw(window);

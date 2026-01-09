@@ -31,6 +31,16 @@ inline void LoadPlayerData() {
         if (key == "theme:") {
             themeAdress[0] = value;
         }
+        else if (key == "fps:") {
+            fps = value;
+        }
+        else if (key == "music:") {
+            Music = value;
+        }
+        else if (key == "soundeffects:") {
+            soundEffects = value;
+        }
+
     }
     fin.close();
     std::cout << "[INFO] Date jucator incarcate: " << themeAdress[0] << std::endl;
@@ -67,6 +77,18 @@ inline void SavePlayerData() {
 
     foutProfile << "theme: " << themeAdress[0] << std::endl;
     foutProfile.close();
+
+    std::ofstream foutSettings("Profile/playerData.txt");
+
+    if (!foutSettings.is_open()) {
+        std::cerr << "[EROARE] Nu pot salva in Profile/playerData.txt" << std::endl;
+        return;
+    }
+
+    foutSettings << "fps: " << fps << std::endl;
+    foutSettings << "music: " << Music << std::endl;
+    foutSettings << "soundeffects: " << soundEffects << std::endl;
+    foutSettings.close();
 
     std::cout << "[INFO] Profil salvat: " << themeAdress[0] << std::endl;
 }

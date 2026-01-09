@@ -24,7 +24,7 @@ struct GameMenu { // struct - alternativa pentru class
     std::optional<sf::Cursor> cursorArrow;
 
     GameMenu() { // Constructor
-        if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
+        if (!font.openFromFile("Themes/Inter_18pt-Bold.ttf")) {
             std::cerr << "Error loading font" << std::endl;
         }
         if (!TablaTexture.loadFromFile("Themes/Default/Tabla.png")) {
@@ -57,8 +57,8 @@ struct GameMenu { // struct - alternativa pentru class
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
         labels = {
-            "Razboi in 8", "", "Play", "Learn", "Stats",
-            "Leaderboard", "", "", "Themes", "Settings"
+            "Razboi in 8", "", "", "Play", "Learn", "Leaderboard",
+            "", "", "Themes", "Settings"
         };
 
         float btnWidth = 543.f;
@@ -140,10 +140,6 @@ struct GameMenu { // struct - alternativa pentru class
                         else if (labels[i] == "Learn") {
                             audio.playClick();
                             interfata = 3;
-                        }
-                        else if (labels[i] == "Stats") {
-                            audio.playClick();
-                            interfata = 4;
                         }
                         else if (labels[i] == "Leaderboard") {
                             audio.playClick();

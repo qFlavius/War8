@@ -1,1 +1,3 @@
-theme: Themes/Default/Default.txt
+fps: 60
+music: OFF
+soundeffects: ON

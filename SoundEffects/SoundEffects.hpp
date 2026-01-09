@@ -4,12 +4,14 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <optional>
+#include "../globalVar.hpp"
 
 struct AudioMenu {
     sf::Font font;
 
     sf::SoundBuffer clickBuffer, clickBuffer2;
-    std::optional<sf::Sound> clickSound,keyboardSound;
+    std::optional<sf::Sound> clickSound, keyboardSound;
 
     AudioMenu() {
         if (!clickBuffer.loadFromFile("SoundEffects/click.wav")) {
@@ -31,13 +33,14 @@ struct AudioMenu {
     }
 
     void playClick() {
-        if (clickSound.has_value()) {
+        if (soundEffects == "ON" && clickSound.has_value()) {
             clickSound->stop();
             clickSound->play();
         }
     }
+
     void playKey() {
-        if (clickSound.has_value()) {
+        if (soundEffects == "ON" && keyboardSound.has_value()) {
             keyboardSound->stop();
             keyboardSound->play();
         }
