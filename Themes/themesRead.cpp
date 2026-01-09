@@ -41,36 +41,36 @@ void Themes() {
         while (fin >> key >> value) {
             for (auto& c : key) c = tolower(c);
 
-            if (key == "background:") {
-                themes[i].color_bg = HexToColor(value);
-            }
-            else if (key == "buttons:") {
-                themes[i].color_buttons = HexToColor(value);
-            }
-            else if (key == "hover-buttons:") {
-                themes[i].color_HoverButton = HexToColor(value);
-            }
-            else if (key == "text:") {
-                themes[i].color_text = HexToColor(value);
-            }
-            else if (key == "boardsquare1:") {
-                themes[i].color_BoardSquare1 = HexToColor(value);
-            }
-            else if (key == "boardsquare2:") {
-                themes[i].color_BoardSquare2 = HexToColor(value);
-            }
-            else if (key == "peace1:") {
-                themes[i].color_peace1 = HexToColor(value);
-            }
-            else if (key == "peaceoutline1:") {
-                themes[i].color_peaceOutline1 = HexToColor(value);
-            }
-            else if (key == "peace2:") {
-                themes[i].color_peace2 = HexToColor(value);
-            }
-            else if (key == "peaceoutline2:") {
-                themes[i].color_peaceOutline2 = HexToColor(value);
-            }
+                if (key == "background:") {
+                    themes[i].color_bg = HexToColor(value);
+                }
+                else if (key == "buttons:") {
+                    themes[i].color_buttons = HexToColor(value);
+                }
+                else if (key == "hover-buttons:") {
+                    themes[i].color_HoverButton = HexToColor(value);
+                }
+                else if (key == "text:") {
+                    themes[i].color_text = HexToColor(value);
+                }
+                else if (key == "boardsquare1:") {
+                    themes[i].color_BoardSquare1 = HexToColor(value);
+                }
+                else if (key == "boardsquare2:") {
+                    themes[i].color_BoardSquare2 = HexToColor(value);
+                }
+                else if (key == "peace1:") {
+                    themes[i].color_peace1 = HexToColor(value);
+                }
+                else if (key == "peaceoutline1:") {
+                    themes[i].color_peaceOutline1 = HexToColor(value);
+                }
+                else if (key == "peace2:") {
+                    themes[i].color_peace2 = HexToColor(value);
+                }
+                else if (key == "peaceoutline2:") {
+                    themes[i].color_peaceOutline2 = HexToColor(value);
+                }
         }
         fin.close();
     }
