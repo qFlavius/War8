@@ -66,7 +66,6 @@ struct SettingsMenu {
         button(back, backTxt, "Back", sf::Vector2f(543.f, 108.f), sf::Vector2f(0.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
         div(div1, sf::Vector2f(650.f, 800.f), sf::Vector2f(SCREEN_W / 2.f, SCREEN_H / 2.f - 54.f), sf::Vector2f(650.f / 2.f, 800.f / 2.f));
 
-        // SFML 3.0 FIX: Use position/size
         sf::FloatRect divBounds = div1.getGlobalBounds();
         float startX = divBounds.position.x;
         float startY = divBounds.position.y;
@@ -80,19 +79,16 @@ struct SettingsMenu {
         // FPS
         button(fpsBtn, fpsTxt, "FPS", sf::Vector2f(btnWidthLabel, btnHeight), sf::Vector2f(startX, startY), sf::Vector2f(0.f, 0.f));
         button(fpsNR, fpsNRTxt, std::to_string(framerates[fpsIndex]), sf::Vector2f(btnWidthValue, btnHeight), sf::Vector2f(rightX, startY), sf::Vector2f(btnWidthValue, 0.f));
-        fpsNR.setFillColor(themes[0].color_HoverButton);
 
         // Sound
         float row2Y = startY + btnHeight + gap;
         button(soundBtn, soundTxt, "Sound Effects", sf::Vector2f(btnWidthLabel, btnHeight), sf::Vector2f(startX, row2Y), sf::Vector2f(0.f, 0.f));
         button(soundNR, soundNRTxt, soundOn ? "ON" : "OFF", sf::Vector2f(btnWidthValue, btnHeight), sf::Vector2f(rightX, row2Y), sf::Vector2f(btnWidthValue, 0.f));
-        soundNR.setFillColor(sf::Color::Green);
 
         // Music
         float row3Y = row2Y + btnHeight + gap;
         button(musicBtn, musicTxt, "Music", sf::Vector2f(btnWidthLabel, btnHeight), sf::Vector2f(startX, row3Y), sf::Vector2f(0.f, 0.f));
         button(musicNR, musicNRTxt, musicOn ? "ON" : "OFF", sf::Vector2f(btnWidthValue, btnHeight), sf::Vector2f(rightX, row3Y), sf::Vector2f(btnWidthValue, 0.f));
-        musicNR.setFillColor(sf::Color::Green);
 
         // Reset
         float divBottomY = divBounds.position.y + divBounds.size.y;
@@ -101,6 +97,8 @@ struct SettingsMenu {
 
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
+
+        updateColors(); // Initial color set
     }
 
     void div(sf::RectangleShape& shape, sf::Vector2f size, sf::Vector2f position, sf::Vector2f origin) {
@@ -114,13 +112,11 @@ struct SettingsMenu {
         shape.setSize(size);
         shape.setPosition(position);
         shape.setOrigin(origin);
-        shape.setFillColor(themes[0].color_buttons);
+
         text.setFont(font);
         text.setString(label);
         text.setCharacterSize(35);
-        text.setFillColor(themes[0].color_text);
 
-        // SFML 3.0 FIX: Use position/size
         sf::FloatRect textRect = text.getLocalBounds();
         text.setOrigin(sf::Vector2f(
             textRect.position.x + textRect.size.x / 2.0f,
@@ -147,6 +143,33 @@ struct SettingsMenu {
         ));
     }
 
+    // THIS FUNCTION REFRESHES COLORS INSTANTLY
+    void updateColors() {
+        sf::Color btnColor = themes[0].color_buttons;
+        sf::Color txtColor = themes[0].color_text;
+
+        back.setFillColor(btnColor);
+        backTxt.setFillColor(txtColor);
+
+        fpsBtn.setFillColor(btnColor);
+        fpsTxt.setFillColor(txtColor);
+
+        fpsNRTxt.setFillColor(txtColor);
+
+        soundBtn.setFillColor(btnColor);
+        soundTxt.setFillColor(txtColor);
+
+        soundNRTxt.setFillColor(txtColor);
+
+        musicBtn.setFillColor(btnColor);
+        musicTxt.setFillColor(txtColor);
+
+        musicNRTxt.setFillColor(txtColor);
+
+        resetBtn.setFillColor(btnColor);
+        resetTxt.setFillColor(txtColor);
+    }
+
     void saveAndSync() {
         fps = std::to_string(framerates[fpsIndex]);
         soundEffects = soundOn ? "ON" : "OFF";
@@ -162,7 +185,7 @@ struct SettingsMenu {
 
                 if (back.getGlobalBounds().contains(mousePosF)) {
                     saveAndSync();
-                    audio.playClick(); 
+                    audio.playClick();
                     interfata = 1;
                 }
                 else if (fpsNR.getGlobalBounds().contains(mousePosF)) {
@@ -172,7 +195,7 @@ struct SettingsMenu {
                     window.setFramerateLimit(newLimit);
                     fpsNRTxt.setString(std::to_string(newLimit));
                     updateTextCenter(fpsNR, fpsNRTxt);
-                    
+
                     saveAndSync();
                     audio.playClick();
                 }
@@ -180,7 +203,7 @@ struct SettingsMenu {
                     soundOn = !soundOn;
                     soundNRTxt.setString(soundOn ? "ON" : "OFF");
                     updateTextCenter(soundNR, soundNRTxt);
-                    
+
                     saveAndSync();
                     audio.playClick();
                 }
@@ -192,7 +215,8 @@ struct SettingsMenu {
                     // Music Control Logic
                     if (musicOn) {
                         if (bgMusic.getStatus() != sf::Music::Status::Playing) bgMusic.play();
-                    } else {
+                    }
+                    else {
                         bgMusic.pause();
                     }
 
@@ -222,12 +246,14 @@ struct SettingsMenu {
     }
 
     void draw(sf::RenderWindow& window) {
+        // ALWAYS UPDATE COLORS BEFORE DRAWING
+        updateColors();
+
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
         bool isHovering = false;
 
-        // Hover logic using new button names
         if (back.getGlobalBounds().contains(mousePosF)) { back.setFillColor(themes[0].color_HoverButton); isHovering = true; }
         else back.setFillColor(themes[0].color_buttons);
 

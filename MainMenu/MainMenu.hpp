@@ -3,12 +3,12 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <optional> 
+#include <optional>
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
 
-struct GameMenu { // struct - alternativa pentru class
+struct GameMenu {
     AudioMenu audio;
 
     sf::Font font;
@@ -16,43 +16,54 @@ struct GameMenu { // struct - alternativa pentru class
     std::vector<sf::Text> texts;
     std::vector<std::string> labels;
 
-    sf::Texture TablaTexture;
-    std::optional<sf::Sprite> TablaSprite;
+    std::vector<sf::RectangleShape> boardSquares;
+    std::vector<sf::CircleShape> boardPieces;
 
-    // Cursors 
     std::optional<sf::Cursor> cursorHand;
     std::optional<sf::Cursor> cursorArrow;
 
-    GameMenu() { // Constructor
+    GameMenu() {
         if (!font.openFromFile("Themes/Inter_18pt-Bold.ttf")) {
             std::cerr << "Error loading font" << std::endl;
         }
-        if (!TablaTexture.loadFromFile("Themes/Default/Tabla.png")) {
-            std::cerr << "Error loading Image" << std::endl;
+
+        float screenWidth = 1920.f;
+        float screenHeight = 1080.f;
+        float buttonSpace = 543.f;
+
+        float finalX = buttonSpace + (screenWidth - buttonSpace) / 2.0f;
+        float finalY = screenHeight / 2.0f;
+
+        float cellSize = 100.f;
+        float boardSize = cellSize * 8.f;
+        float startX = finalX - (boardSize / 2.0f);
+        float startY = finalY - (boardSize / 2.0f);
+
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                sf::RectangleShape square(sf::Vector2f(cellSize, cellSize));
+                square.setPosition(sf::Vector2f(startX + j * cellSize, startY + i * cellSize));
+
+                if ((i + j) % 2 != 0) {
+                    if (i < 2) {
+                        sf::CircleShape piece(cellSize * 0.29f);
+                        piece.setOutlineThickness(cellSize * 0.1f);
+                        piece.setOrigin(sf::Vector2f(piece.getRadius(), piece.getRadius()));
+                        piece.setPosition(sf::Vector2f(startX + j * cellSize + cellSize / 2.f, startY + i * cellSize + cellSize / 2.f));
+                        boardPieces.push_back(piece);
+                    }
+                    else if (i > 5) {
+                        sf::CircleShape piece(cellSize * 0.29f);
+                        piece.setOutlineThickness(cellSize * 0.1f);
+                        piece.setOrigin(sf::Vector2f(piece.getRadius(), piece.getRadius()));
+                        piece.setPosition(sf::Vector2f(startX + j * cellSize + cellSize / 2.f, startY + i * cellSize + cellSize / 2.f));
+                        boardPieces.push_back(piece);
+                    }
+                }
+                boardSquares.push_back(square);
+            }
         }
-        else {
-            TablaSprite.emplace(TablaTexture);
 
-            sf::Vector2u imgSize = TablaTexture.getSize();
-
-            TablaSprite->setOrigin({ imgSize.x / 2.0f, imgSize.y / 2.0f });
-
-            TablaSprite->setScale({ 1.2f, 1.2f });
-
-            float screenWidth = 1920.f;
-            float screenHeight = 1080.f;
-            float buttonSpace = 543.f;
-
-            // Calculam pozitia X (Orizontala)
-            float finalX = buttonSpace + (screenWidth - buttonSpace) / 2.0f;
-            // Calculam pozitia Y (Verticala) - Mijlocul ecranului
-            float finalY = screenHeight / 2.0f;
-
-            // Aplicam pozitia
-            TablaSprite->setPosition({ finalX, finalY });
-        }
-
-        // Cursorul 
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
@@ -66,17 +77,20 @@ struct GameMenu { // struct - alternativa pentru class
 
         for (size_t i = 0; i < labels.size(); ++i) {
             sf::RectangleShape rect(sf::Vector2f(btnWidth, btnHeight));
-            rect.setFillColor(themes[0].color_buttons);
-            rect.setPosition({ 0.f, btnHeight * (static_cast<float>(i)) });
+            rect.setPosition(sf::Vector2f(0.f, btnHeight * (static_cast<float>(i))));
             buttons.push_back(rect);
 
             if (!labels[i].empty()) {
                 sf::Text txt(font);
                 txt.setString(labels[i]);
-                txt.setFillColor(themes[0].color_text);
                 txt.setCharacterSize(i == 0 ? 36 : 28);
 
-                CenterText(txt, buttons.back());
+                sf::FloatRect textRect = txt.getLocalBounds();
+                txt.setOrigin(sf::Vector2f(textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f));
+
+                sf::FloatRect btnRect = buttons.back().getGlobalBounds();
+                txt.setPosition(sf::Vector2f(btnRect.position.x + btnRect.size.x / 2.0f, btnRect.position.y + btnRect.size.y / 2.0f));
+
                 texts.push_back(txt);
             }
         }
@@ -86,15 +100,36 @@ struct GameMenu { // struct - alternativa pentru class
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
+        for (size_t k = 0; k < boardSquares.size(); ++k) {
+            int i = k / 8;
+            int j = k % 8;
+            if ((i + j) % 2 == 0) {
+                boardSquares[k].setFillColor(themes[0].color_BoardSquare1);
+            }
+            else {
+                boardSquares[k].setFillColor(themes[0].color_BoardSquare2);
+            }
+        }
+
+        for (size_t k = 0; k < boardPieces.size(); ++k) {
+            if (k < 8) {
+                boardPieces[k].setFillColor(themes[0].color_peace1);
+                boardPieces[k].setOutlineColor(themes[0].color_peaceOutline1);
+            }
+            else {
+                boardPieces[k].setFillColor(themes[0].color_peace2);
+                boardPieces[k].setOutlineColor(themes[0].color_peaceOutline2);
+            }
+        }
+
         bool isHovering = false;
 
-        // Actualizeaza culorile cand tinem cursorul pe buton
         for (size_t i = 0; i < buttons.size(); ++i) {
             if (labels[i] == "") {
                 buttons[i].setFillColor(themes[0].color_buttons);
                 continue;
             }
-            
+
             if (buttons[i].getGlobalBounds().contains(mousePosF)) {
                 buttons[i].setFillColor(themes[0].color_HoverButton);
                 isHovering = true;
@@ -104,7 +139,6 @@ struct GameMenu { // struct - alternativa pentru class
             }
         }
 
-        // Actualizam cursorul
         if (isHovering && cursorHand.has_value()) {
             window.setMouseCursor(*cursorHand);
         }
@@ -112,13 +146,16 @@ struct GameMenu { // struct - alternativa pentru class
             window.setMouseCursor(*cursorArrow);
         }
 
-        // Desenam tot
-        // MODIFICARE: Verificam daca exista sprite-ul si folosim *
-        if (TablaSprite.has_value()) {
-            window.draw(*TablaSprite);
+        for (const auto& square : boardSquares) {
+            window.draw(square);
         }
+        for (const auto& piece : boardPieces) {
+            window.draw(piece);
+        }
+
         for (const auto& rect : buttons) window.draw(rect);
-        for (auto txt : texts) {
+
+        for (auto& txt : texts) {
             txt.setFillColor(themes[0].color_text);
             window.draw(txt);
         }

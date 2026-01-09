@@ -9,10 +9,8 @@
 #include "MainMenu/MainMenu.hpp"
 #include "PlayScreen/PlayScreen.hpp"
 #include "Profile/playerData.hpp"
-#include "Stats/stats.hpp"
 #include "Learn/learn.hpp"
 #include "LeaderBoard/leaderboard.hpp"
-#include "Profiles/profiles.hpp"
 #include "Settings/settings.hpp"
 #include "AI/AIPlayer.hpp"
 
@@ -61,9 +59,7 @@ int main()
 
     GameMenu menu;
     GameThemes themePage;
-    StatsMenu stats;
     SettingsMenu settings;
-    ProfilesMenu profiles;
     LeaderboardMenu leaderboard;
     LearnMenu learn;
 

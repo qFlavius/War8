@@ -7,7 +7,6 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 
-// Functia de Conversie RGB -> HEX
 inline std::string ColorToHex(sf::Color color) {
     std::stringstream ss;
     ss << "#" << std::hex << std::uppercase << std::setfill('0');
@@ -40,10 +39,9 @@ inline void LoadPlayerData() {
         else if (key == "soundeffects:") {
             soundEffects = value;
         }
-
     }
     fin.close();
-    std::cout << "[INFO] Date jucator incarcate: " << themeAdress[0] << std::endl;
+    std::cout << "[INFO] Player data loaded: " << themeAdress[0] << std::endl;
 }
 
 inline void SavePlayerData() {
@@ -62,33 +60,24 @@ inline void SavePlayerData() {
         foutTheme << "PeaceOutline2: " << ColorToHex(themes[4].color_peaceOutline2) << std::endl;
 
         foutTheme.close();
-        std::cout << "[INFO] Culorile custom au fost actualizate in fisier." << std::endl;
     }
     else {
-        std::cerr << "[EROARE] Nu pot deschide Themes/Custom/custom.txt pentru scriere!" << std::endl;
+        std::cerr << "Error opening Themes/Custom/custom.txt" << std::endl;
     }
 
     std::ofstream foutProfile("Profile/playerData.txt");
 
     if (!foutProfile.is_open()) {
-        std::cerr << "[EROARE] Nu pot salva in Profile/playerData.txt" << std::endl;
+        std::cerr << "Error saving Profile/playerData.txt" << std::endl;
         return;
     }
 
     foutProfile << "theme: " << themeAdress[0] << std::endl;
+    foutProfile << "fps: " << fps << std::endl;
+    foutProfile << "music: " << Music << std::endl;
+    foutProfile << "soundeffects: " << soundEffects << std::endl;
+
     foutProfile.close();
 
-    std::ofstream foutSettings("Profile/playerData.txt");
-
-    if (!foutSettings.is_open()) {
-        std::cerr << "[EROARE] Nu pot salva in Profile/playerData.txt" << std::endl;
-        return;
-    }
-
-    foutSettings << "fps: " << fps << std::endl;
-    foutSettings << "music: " << Music << std::endl;
-    foutSettings << "soundeffects: " << soundEffects << std::endl;
-    foutSettings.close();
-
-    std::cout << "[INFO] Profil salvat: " << themeAdress[0] << std::endl;
+    std::cout << "[INFO] Profile saved: " << themeAdress[0] << std::endl;
 }

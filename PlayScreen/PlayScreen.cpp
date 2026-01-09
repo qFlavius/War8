@@ -6,10 +6,12 @@
 #include <map>                   // Added for leaderboard sorting
 #include <string>                // Added for string manipulation
 #include <algorithm>             // Added for std::replace
+#include <optional>              // Added for cursors
 #include <SFML/System/Angle.hpp> // sf::degrees (SFML 3)
 #include "../SoundEffects/SoundEffects.hpp"
 #include "../GameConfig.hpp"
 #include "../AI/AIPlayer.hpp"
+#include "../Themes/themesRead.h" // Added to access themes[0]
 
 // ============================================================================
 //  PLAYSCREEN
@@ -106,6 +108,9 @@ static int g_phase = PHASE_MODE;
 static int g_winner = 0;
 static char g_overReason[64] = ""; // motiv final (ex: "Time out")
 
+// Cursors
+static std::optional<sf::Cursor> g_cursorHand;
+static std::optional<sf::Cursor> g_cursorArrow;
 
 // ------------------------------ TEXT (SFML 3) ------------------------------
 
@@ -378,16 +383,11 @@ static void initConfetti(sf::RenderWindow& w) {
     g_overClock.restart();
 }
 
-// ----------------------------------------------------------------------------
-//  LOGICA NOUA PENTRU LEADERBOARD
-// ----------------------------------------------------------------------------
 static void saveWinToLeaderboard(std::string name) {
     if (name.empty()) return;
 
-    // Inlocuiesc spatiile cu underscore pt a nu strica formatul fisierului text
     std::replace(name.begin(), name.end(), ' ', '_');
 
-    // Citesc fisierul existent intr-un map
     std::map<std::string, int> scores;
     std::ifstream fin("LeaderBoard/leaderboard.txt");
     if (fin.is_open()) {
@@ -399,10 +399,8 @@ static void saveWinToLeaderboard(std::string name) {
         fin.close();
     }
 
-    // Incrementez scorul castigatorului
     scores[name]++;
 
-    // Rescriu fisierul
     std::ofstream fout("LeaderBoard/leaderboard.txt");
     if (fout.is_open()) {
         for (const auto& pair : scores) {
@@ -842,53 +840,71 @@ static void setupTextStyles() {
     if (!g_fontReady) return;
 
     g_title.setCharacterSize(34);
-    g_title.setFillColor(sf::Color::Black);
+    g_title.setFillColor(themes[0].color_text);
 
     g_hint.setCharacterSize(18);
-    g_hint.setFillColor(sf::Color::Black);
+    g_hint.setFillColor(themes[0].color_text);
 
     g_labelWhite.setCharacterSize(22);
-    g_labelWhite.setFillColor(sf::Color::Black);
+    g_labelWhite.setFillColor(themes[0].color_text);
 
     g_labelBlack.setCharacterSize(22);
-    g_labelBlack.setFillColor(sf::Color::Black);
+    g_labelBlack.setFillColor(themes[0].color_text);
 
     g_nameTextWhite.setCharacterSize(28);
-    g_nameTextWhite.setFillColor(sf::Color::Black);
+    g_nameTextWhite.setFillColor(themes[0].color_text);
 
     g_nameTextBlack.setCharacterSize(28);
-    g_nameTextBlack.setFillColor(sf::Color::Black);
+    g_nameTextBlack.setFillColor(themes[0].color_text);
 
     // HUD: numele jucatorului in tura (mai mare) + timpul ramas sub el
     g_hudTurn.setCharacterSize(34);
-    g_hudTurn.setFillColor(sf::Color::Black);
+    g_hudTurn.setFillColor(themes[0].color_text);
 
     g_hudRemain.setCharacterSize(30);
-    g_hudRemain.setFillColor(sf::Color::Black);
+    g_hudRemain.setFillColor(themes[0].color_text);
 
     g_hudLeft.setCharacterSize(22);
-    g_hudLeft.setFillColor(sf::Color::Black);
+    g_hudLeft.setFillColor(themes[0].color_text);
 
     g_hudRight.setCharacterSize(22);
-    g_hudRight.setFillColor(sf::Color::Black);
+    g_hudRight.setFillColor(themes[0].color_text);
 
     // HUD: timpul total scurs in joc (format MM:SS)
     g_hudTime.setCharacterSize(22);
-    g_hudTime.setFillColor(sf::Color::Black);
+    g_hudTime.setFillColor(themes[0].color_text);
 
     g_overTitle.setCharacterSize(42);
-    g_overTitle.setFillColor(sf::Color::White);
+    g_overTitle.setFillColor(themes[0].color_text);
 
     g_overWinner.setCharacterSize(54);
-    g_overWinner.setFillColor(sf::Color::White);
+    g_overWinner.setFillColor(themes[0].color_text);
 
     g_overReasonText.setCharacterSize(22);
-    g_overReasonText.setFillColor(sf::Color(230, 230, 230));
+    g_overReasonText.setFillColor(themes[0].color_text);
 
     g_overHint.setCharacterSize(20);
-    g_overHint.setFillColor(sf::Color(230, 230, 230));
+    g_overHint.setFillColor(themes[0].color_text);
 }
 
+// Function to update text colors constantly during game loop
+static void updateTextColors() {
+    g_title.setFillColor(themes[0].color_text);
+    g_hint.setFillColor(themes[0].color_text);
+    g_labelWhite.setFillColor(themes[0].color_text);
+    g_labelBlack.setFillColor(themes[0].color_text);
+    g_nameTextWhite.setFillColor(themes[0].color_text);
+    g_nameTextBlack.setFillColor(themes[0].color_text);
+    g_hudTurn.setFillColor(themes[0].color_text);
+    g_hudRemain.setFillColor(themes[0].color_text);
+    g_hudLeft.setFillColor(themes[0].color_text);
+    g_hudRight.setFillColor(themes[0].color_text);
+    g_hudTime.setFillColor(themes[0].color_text);
+    g_overTitle.setFillColor(themes[0].color_text);
+    g_overWinner.setFillColor(themes[0].color_text);
+    g_overReasonText.setFillColor(themes[0].color_text);
+    g_overHint.setFillColor(themes[0].color_text);
+}
 
 // ============================================================================
 //  DESENARE: tabla
@@ -907,14 +923,14 @@ static void drawFrame(sf::RenderWindow& w) {
 
     sf::RectangleShape frame({ boardPx + 2.f * g_frame, boardPx + 2.f * g_frame });
     frame.setPosition({ g_origin.x - g_frame, g_origin.y - g_frame });
-    frame.setFillColor(sf::Color(120, 70, 25));
+    frame.setFillColor(themes[0].color_buttons);
     w.draw(frame);
 
     sf::RectangleShape innerLine({ boardPx + 2.f * (g_frame - 6.f), boardPx + 2.f * (g_frame - 6.f) });
     innerLine.setPosition({ g_origin.x - (g_frame - 6.f), g_origin.y - (g_frame - 6.f) });
     innerLine.setFillColor(sf::Color::Transparent);
     innerLine.setOutlineThickness(3.f);
-    innerLine.setOutlineColor(sf::Color(220, 180, 120, 180));
+    innerLine.setOutlineColor(themes[0].color_HoverButton);
     w.draw(innerLine);
 }
 
@@ -923,8 +939,8 @@ static void drawFrame(sf::RenderWindow& w) {
 */
 static void drawBoard(sf::RenderWindow& w) {
     sf::RectangleShape sq({ g_tile, g_tile });
-    sf::Color light(235, 235, 235);
-    sf::Color dark(120, 120, 120);
+    sf::Color light = themes[0].color_BoardSquare1;
+    sf::Color dark = themes[0].color_BoardSquare2;
 
     for (int r = 0; r < 8; r++) {
         for (int c = 0; c < 8; c++) {
@@ -945,7 +961,9 @@ static void drawHighlights(sf::RenderWindow& w) {
     if (!g_fontReady) return;
 
     sf::RectangleShape hl({ g_tile, g_tile });
-    hl.setFillColor(sf::Color(255, 215, 0, 110));
+    sf::Color hlColor = themes[0].color_HoverButton;
+    hlColor.a = 110;
+    hl.setFillColor(hlColor);
 
     for (int i = 0; i < g_moveCount; i++) {
         hl.setPosition({ g_origin.x + g_movesC[i] * g_tile, g_origin.y + g_movesR[i] * g_tile });
@@ -955,7 +973,7 @@ static void drawHighlights(sf::RenderWindow& w) {
     if (g_hasSel) {
         sf::RectangleShape selBox({ g_tile, g_tile });
         selBox.setFillColor(sf::Color::Transparent);
-        selBox.setOutlineColor(sf::Color(0, 180, 255));
+        selBox.setOutlineColor(themes[0].color_HoverButton);
         selBox.setOutlineThickness(5.f);
         selBox.setPosition({ g_origin.x + g_selC * g_tile, g_origin.y + g_selR * g_tile });
         w.draw(selBox);
@@ -966,7 +984,7 @@ static void drawHighlights(sf::RenderWindow& w) {
   Desenez piesele ca cercuri.
 */
 static void drawPieces(sf::RenderWindow& w) {
-    float rad = g_tile * 0.38f;
+    float rad = g_tile * 0.28f;
     sf::CircleShape p(rad);
     p.setOrigin({ rad, rad });
 
@@ -981,14 +999,14 @@ static void drawPieces(sf::RenderWindow& w) {
             };
 
             if (piece == 1) {
-                p.setFillColor(sf::Color(245, 245, 245));
-                p.setOutlineColor(sf::Color::Black);
-                p.setOutlineThickness(3.f);
+                p.setFillColor(themes[0].color_peace2);
+                p.setOutlineColor(themes[0].color_peaceOutline2);
+                p.setOutlineThickness(10.f);
             }
             else {
-                p.setFillColor(sf::Color(35, 35, 35));
-                p.setOutlineColor(sf::Color::White);
-                p.setOutlineThickness(3.f);
+                p.setFillColor(themes[0].color_peace1);
+                p.setOutlineColor(themes[0].color_peaceOutline1);
+                p.setOutlineThickness(10.f);
             }
 
             p.setPosition(center);
@@ -1029,9 +1047,9 @@ static void drawHUD(sf::RenderWindow& w) {
 
     sf::RectangleShape headerBg({ frameW, headerH });
     headerBg.setPosition({ frameX, headerY });
-    headerBg.setFillColor(sf::Color(245, 235, 220));
+    headerBg.setFillColor(themes[0].color_buttons);
     headerBg.setOutlineThickness(4.f);
-    headerBg.setOutlineColor(sf::Color(120, 70, 25));
+    headerBg.setOutlineColor(themes[0].color_text);
     w.draw(headerBg);
 
     // timpul total scurs (stanga sus in panou) - doar MM:SS
@@ -1096,9 +1114,9 @@ static void drawHUD(sf::RenderWindow& w) {
     {
         sf::RectangleShape bg({ panelW, panelH });
         bg.setPosition({ frameX - panelW - panelGap, panelY });
-        bg.setFillColor(sf::Color(245, 235, 220));
+        bg.setFillColor(themes[0].color_buttons);
         bg.setOutlineThickness(4.f);
-        bg.setOutlineColor(sf::Color(120, 70, 25));
+        bg.setOutlineColor(themes[0].color_text);
         w.draw(bg);
 
         char buf[256];
@@ -1113,9 +1131,9 @@ static void drawHUD(sf::RenderWindow& w) {
     {
         sf::RectangleShape bg({ panelW, panelH });
         bg.setPosition({ frameX + frameW + panelGap, panelY });
-        bg.setFillColor(sf::Color(245, 235, 220));
+        bg.setFillColor(themes[0].color_buttons);
         bg.setOutlineThickness(4.f);
-        bg.setOutlineColor(sf::Color(120, 70, 25));
+        bg.setOutlineColor(themes[0].color_text);
         w.draw(bg);
 
         char buf[256];
@@ -1139,20 +1157,21 @@ static void drawButton(sf::RenderWindow& w, const sf::FloatRect& r, const char* 
     sf::RectangleShape box({ r.size.x, r.size.y });
     box.setPosition({ r.position.x, r.position.y });
 
-    sf::Color fill(255, 255, 255);
-    if (active) fill = sf::Color(220, 245, 255);
-    if (hover) fill = sf::Color(240, 240, 240);
-    if (active && hover) fill = sf::Color(210, 235, 255);
+    sf::Color fill = themes[0].color_buttons;
+    if (active) fill = themes[0].color_HoverButton;
+    if (hover) fill = themes[0].color_HoverButton;
+
+    // Slight variation for active+hover if needed, but keeping it simple for theme consistency
 
     box.setFillColor(fill);
     box.setOutlineThickness(3.f);
-    box.setOutlineColor(active ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    box.setOutlineColor(active ? themes[0].color_HoverButton : themes[0].color_buttons); // Or border color if available
     w.draw(box);
 
     if (!g_fontReady) return;
     sf::Text t(g_font);
     t.setCharacterSize(26);
-    t.setFillColor(sf::Color::Black);
+    t.setFillColor(themes[0].color_text);
     t.setString(text);
     t.setPosition({ r.position.x + 18.f, r.position.y + 16.f });
     w.draw(t);
@@ -1174,9 +1193,9 @@ static void drawModeSelect(sf::RenderWindow& w) {
 
     sf::RectangleShape panel({ 820.f, 520.f });
     panel.setPosition({ (W - 820.f) / 2.f, (H - 520.f) / 2.f });
-    panel.setFillColor(sf::Color(245, 235, 220));
+    panel.setFillColor(themes[0].color_buttons);
     panel.setOutlineThickness(4.f);
-    panel.setOutlineColor(sf::Color(120, 70, 25));
+    panel.setOutlineColor(themes[0].color_text);
     w.draw(panel);
 
     float px = panel.getPosition().x;
@@ -1216,9 +1235,9 @@ static void drawNameEntry(sf::RenderWindow& w) {
 
     sf::RectangleShape panel({ 820.f, 440.f });
     panel.setPosition({ (W - 820.f) / 2.f, (H - 440.f) / 2.f });
-    panel.setFillColor(sf::Color(245, 235, 220));
+    panel.setFillColor(themes[0].color_buttons);
     panel.setOutlineThickness(4.f);
-    panel.setOutlineColor(sf::Color(120, 70, 25));
+    panel.setOutlineColor(themes[0].color_text);
     w.draw(panel);
 
     float px = panel.getPosition().x;
@@ -1238,18 +1257,18 @@ static void drawNameEntry(sf::RenderWindow& w) {
 
     sf::RectangleShape box1({ 740.f, 60.f });
     box1.setPosition({ px + 40.f, py + 155.f });
-    box1.setFillColor(g_isComputerWhite ? sf::Color(240, 240, 240) : sf::Color::White);
+    box1.setFillColor(g_isComputerWhite ? themes[0].color_buttons : themes[0].color_bg);
     box1.setOutlineThickness(3.f);
-    if (g_isComputerWhite) box1.setOutlineColor(sf::Color(170, 170, 170));
-    else box1.setOutlineColor(g_activeName == 0 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    if (g_isComputerWhite) box1.setOutlineColor(themes[0].color_buttons);
+    else box1.setOutlineColor(g_activeName == 0 ? themes[0].color_HoverButton : themes[0].color_buttons);
     w.draw(box1);
 
     sf::RectangleShape box2({ 740.f, 60.f });
     box2.setPosition({ px + 40.f, py + 265.f });
-    box2.setFillColor(g_isComputerBlack ? sf::Color(240, 240, 240) : sf::Color::White);
+    box2.setFillColor(g_isComputerBlack ? themes[0].color_buttons : themes[0].color_bg);
     box2.setOutlineThickness(3.f);
-    if (g_isComputerBlack) box2.setOutlineColor(sf::Color(170, 170, 170));
-    else box2.setOutlineColor(g_activeName == 1 ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    if (g_isComputerBlack) box2.setOutlineColor(themes[0].color_buttons);
+    else box2.setOutlineColor(g_activeName == 1 ? themes[0].color_HoverButton : themes[0].color_buttons);
     w.draw(box2);
 
     g_nameTextWhite.setString(g_nameWhite);
@@ -1263,7 +1282,7 @@ static void drawNameEntry(sf::RenderWindow& w) {
     // cursor simplu (linie) la finalul campului activ
     if (g_activeName >= 0) {
         sf::RectangleShape caret({ 2.f, 32.f });
-        caret.setFillColor(sf::Color::Black);
+        caret.setFillColor(themes[0].color_text);
 
         if (g_activeName == 0 && !g_isComputerWhite) {
             auto b = g_nameTextWhite.getLocalBounds();
@@ -1300,9 +1319,9 @@ static void drawOptions(sf::RenderWindow& w) {
 
     sf::RectangleShape panel({ 920.f, 560.f });
     panel.setPosition({ (W - 920.f) / 2.f, (H - 560.f) / 2.f });
-    panel.setFillColor(sf::Color(245, 235, 220));
+    panel.setFillColor(themes[0].color_buttons);
     panel.setOutlineThickness(4.f);
-    panel.setOutlineColor(sf::Color(120, 70, 25));
+    panel.setOutlineColor(themes[0].color_text);
     w.draw(panel);
 
     float px = panel.getPosition().x;
@@ -1320,14 +1339,14 @@ static void drawOptions(sf::RenderWindow& w) {
     sf::FloatRect timeBox({ px + 420.f, py + 120.f }, { 220.f, 70.f });
     sf::RectangleShape tb({ timeBox.size.x, timeBox.size.y });
     tb.setPosition({ timeBox.position.x, timeBox.position.y });
-    tb.setFillColor(g_useTurnTimer ? sf::Color::White : sf::Color(240, 240, 240));
+    tb.setFillColor(g_useTurnTimer ? themes[0].color_bg : themes[0].color_buttons);
     tb.setOutlineThickness(3.f);
-    tb.setOutlineColor(g_editTurnTime ? sf::Color(0, 180, 255) : sf::Color(170, 170, 170));
+    tb.setOutlineColor(g_editTurnTime ? themes[0].color_HoverButton : themes[0].color_text);
     w.draw(tb);
 
     sf::Text tTime(g_font);
     tTime.setCharacterSize(30);
-    tTime.setFillColor(sf::Color::Black);
+    tTime.setFillColor(themes[0].color_text);
     tTime.setString(g_turnTimeStr);
     tTime.setPosition({ timeBox.position.x + 32.f, timeBox.position.y + 16.f });
     w.draw(tTime);
@@ -1347,7 +1366,7 @@ static void drawOptions(sf::RenderWindow& w) {
         else if (cursorPos == 4) dx = 18.f * 4.f;
 
         sf::RectangleShape caret({ 2.f, 34.f });
-        caret.setFillColor(sf::Color::Black);
+        caret.setFillColor(themes[0].color_text);
         caret.setPosition({ baseX + dx + 2.f, baseY + 2.f });
         w.draw(caret);
     }
@@ -1440,9 +1459,14 @@ static void drawGameOver(sf::RenderWindow& w) {
 
     sf::RectangleShape banner({ 900.f, 360.f });
     banner.setPosition({ (W - 900.f) / 2.f, (H - 360.f) / 2.f });
-    banner.setFillColor(sf::Color(20, 20, 20, 220));
+
+    // Applying buttons color with some alpha for the banner background
+    sf::Color bannerColor = themes[0].color_buttons;
+    bannerColor.a = 220;
+    banner.setFillColor(bannerColor);
+
     banner.setOutlineThickness(4.f);
-    banner.setOutlineColor(sf::Color(255, 215, 0, 220));
+    banner.setOutlineColor(themes[0].color_HoverButton);
     w.draw(banner);
 
     float bx = banner.getPosition().x;
@@ -1499,6 +1523,8 @@ void Play_Init() {
         g_fontReady = g_font.openFromFile("Themes/Kanit-Medium.ttf");
         setupTextStyles();
     }
+    g_cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
+    g_cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
     resetAllToModeSelect();
 }
 
@@ -1786,6 +1812,57 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     }
 }
 
+static void updateCursor(sf::RenderWindow& w) {
+    if (!g_cursorHand.has_value() || !g_cursorArrow.has_value()) return;
+
+    bool hover = false;
+    sf::Vector2i mp = sf::Mouse::getPosition(w);
+    sf::Vector2f m = w.mapPixelToCoords(mp);
+
+    if (g_phase == PHASE_MODE) {
+        auto sz = w.getSize();
+        float W = (float)sz.x;
+        float H = (float)sz.y;
+        float px = (W - 820.f) / 2.f;
+        float py = (H - 520.f) / 2.f;
+
+        if (sf::FloatRect({ px + 40.f, py + 130.f }, { 740.f, 80.f }).contains(m)) hover = true;
+        else if (sf::FloatRect({ px + 40.f, py + 230.f }, { 740.f, 80.f }).contains(m)) hover = true;
+        else if (sf::FloatRect({ px + 40.f, py + 330.f }, { 740.f, 80.f }).contains(m)) hover = true;
+    }
+    else if (g_phase == PHASE_OPTIONS) {
+        auto sz = w.getSize();
+        float W = (float)sz.x;
+        float H = (float)sz.y;
+        float px = (W - 920.f) / 2.f;
+        float py = (H - 560.f) / 2.f;
+
+        if (sf::FloatRect({ px + 40.f, py + 120.f }, { 360.f, 70.f }).contains(m)) hover = true;
+        else if (sf::FloatRect({ px + 420.f, py + 120.f }, { 220.f, 70.f }).contains(m)) hover = true;
+
+        float y = py + 220.f;
+        if (g_isComputerWhite) {
+            if (sf::FloatRect({ px + 40.f, y }, { 600.f, 70.f }).contains(m)) hover = true;
+            y += 90.f;
+        }
+        if (g_isComputerBlack) {
+            if (sf::FloatRect({ px + 40.f, y }, { 600.f, 70.f }).contains(m)) hover = true;
+        }
+
+        if (sf::FloatRect({ px + 40.f, py + 460.f }, { 220.f, 70.f }).contains(m)) hover = true;
+        else if (sf::FloatRect({ px + 660.f, py + 460.f }, { 220.f, 70.f }).contains(m)) hover = true;
+    }
+    else if (g_phase == PHASE_GAME) {
+        if (!isComputerSide(g_turn)) {
+            sf::FloatRect br(g_origin, { g_tile * 8.f, g_tile * 8.f });
+            if (br.contains(m)) hover = true;
+        }
+    }
+
+    if (hover) w.setMouseCursor(*g_cursorHand);
+    else w.setMouseCursor(*g_cursorArrow);
+}
+
 /*
   Functia de desen:
   - in setup (mode/nume/optiuni) desenez tabla ca fundal + overlay
@@ -1793,6 +1870,8 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
   - in final desenez overlay-ul de final peste joc
 */
 void Play_Draw(sf::RenderWindow& w) {
+    updateCursor(w);
+    updateTextColors(); // Ensure text colors are updated every frame
     updateLayout(w);
 
     // update automatizari (time out + mutari computer)

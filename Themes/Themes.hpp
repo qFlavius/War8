@@ -72,10 +72,6 @@ struct GameThemes {
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
-        // ==================================================================================
-        // SETUL 1 (DEFAULT)
-        // ==================================================================================
-
         themeLabel.setSize(sf::Vector2f(731.f, 343.f));
         themeLabel.setFillColor(themes[1].color_bg);
         sf::Vector2f size = themeLabel.getSize();
@@ -139,9 +135,6 @@ struct GameThemes {
             });
         selectBtn.setPosition(selectButton1.getGlobalBounds().getCenter());
 
-        // ==================================================================================
-        // SETUL 2
-        // ==================================================================================
         themeLabel_2.setSize(sf::Vector2f(731.f, 343.f));
         themeLabel_2.setFillColor(themes[3].color_bg);
         themeLabel_2.setOrigin({ size.x / 2.0f, size.y / 2.0f });
@@ -198,9 +191,6 @@ struct GameThemes {
             });
         selectBtn_2.setPosition(selectButton1_2.getGlobalBounds().getCenter());
 
-        // ==================================================================================
-        // SETUL 3
-        // ==================================================================================
         themeLabel_3.setSize(sf::Vector2f(731.f, 343.f));
         themeLabel_3.setFillColor(themes[2].color_bg);
         themeLabel_3.setOrigin({ size.x / 2.0f, size.y / 2.0f });
@@ -257,9 +247,6 @@ struct GameThemes {
             });
         selectBtn_3.setPosition(selectButton1_3.getGlobalBounds().getCenter());
 
-        // ==================================================================================
-        // SETUL 4
-        // ==================================================================================
         themeLabel_4.setSize(sf::Vector2f(731.f, 343.f));
         themeLabel_4.setFillColor(themes[4].color_bg);
         themeLabel_4.setOrigin({ size.x / 2.0f, size.y / 2.0f });
@@ -338,15 +325,12 @@ struct GameThemes {
             btnBounds.position.y + btnBounds.size.y / 2.0f
             });
 
-        //////////////////////////
-        // POPUP
-        //////////////////////////
         float sizex = 1700, sizey = 850;
         popupBG.setSize(sf::Vector2f(sizex, sizey));
         popupBG.setFillColor(themes[0].color_bg);
         popupBG.setOrigin({ sizex / 2.0f, sizey / 2.0f });
         popupBG.setPosition({ screenWidth / 2.f, screenHeight / 2.f - 52.f });
-        
+
         themeLabel_5.setSize(sf::Vector2f(731.f, 343.f));
         themeLabel_5.setFillColor(themes[4].color_bg);
         themeLabel_5.setOrigin({ size.x / 2.0f, size.y / 2.0f });
@@ -406,8 +390,8 @@ struct GameThemes {
         labels = {
             "Background", "Buttons", "Hovering Color",
             "Text", "Board Square 1", "Board Square 2",
-            "Peace 1", "Peace 2",
-            "Peace Outline 1", "Peace Outline 2"
+            "Piece 1", "Piece 2",
+            "Piece Outline 1", "Piece Outline 2"
         };
         std::vector<sf::Color> themeColors = {
             themes[4].color_bg,
@@ -521,7 +505,6 @@ struct GameThemes {
 
                 popupBG.setFillColor(themes[0].color_bg);
                 if (popUp) {
-                    // CONFIRM button
                     if (selectButton1_5.getGlobalBounds().contains(mousePosF)) {
                         audio.playClick();
                         themes[0] = themes[4];
@@ -531,14 +514,12 @@ struct GameThemes {
                         popUp = false;
                         return;
                     }
-                    // BACK button
                     if (back.getGlobalBounds().contains(mousePosF)) {
                         audio.playClick();
                         popUp = false;
                         return;
                     }
 
-                    // CIRCLE selection
                     bool clickedOnASetColor = false;
                     for (auto& circle : SetColors) {
                         if (circle.getGlobalBounds().contains(mousePosF)) {
@@ -559,7 +540,6 @@ struct GameThemes {
                         }
                     }
 
-                    // APPLYING colors
                     for (const auto& pickCircle : PickColors) {
                         if (pickCircle.getGlobalBounds().contains(mousePosF)) {
                             audio.playClick();
@@ -671,7 +651,6 @@ struct GameThemes {
         backTxt.setFillColor(themes[0].color_text);
         window.draw(back);
         window.draw(backTxt);
-        // Setul 1
         window.draw(themeLabel);
         window.draw(square1);
         window.draw(square2);
@@ -684,7 +663,6 @@ struct GameThemes {
         window.draw(themeName);
         window.draw(selectBtn);
 
-        // Setul 2
         window.draw(themeLabel_2);
         window.draw(square1_2);
         window.draw(square2_2);
@@ -697,7 +675,6 @@ struct GameThemes {
         window.draw(themeName_2);
         window.draw(selectBtn_2);
 
-        // Setul 3
         window.draw(themeLabel_3);
         window.draw(square1_3);
         window.draw(square2_3);
@@ -710,7 +687,6 @@ struct GameThemes {
         window.draw(themeName_3);
         window.draw(selectBtn_3);
 
-        // Setul 4
         window.draw(themeLabel_4);
         window.draw(square1_4);
         window.draw(square2_4);

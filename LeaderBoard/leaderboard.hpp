@@ -62,26 +62,23 @@ struct LeaderboardMenu {
 
         headerShape.setSize(sf::Vector2f(tableWidth, headerHeight));
         headerShape.setPosition(sf::Vector2f(startX, startY));
-        headerShape.setFillColor(themes[0].color_buttons);
 
         leftColShape.setSize(sf::Vector2f(nameColWidth, tableHeight));
         leftColShape.setPosition(sf::Vector2f(startX, startY + headerHeight));
-        leftColShape.setFillColor(themes[0].color_buttons);
 
         rightColShape.setSize(sf::Vector2f(scoreColWidth, tableHeight));
         rightColShape.setPosition(sf::Vector2f(startX + nameColWidth, startY + headerHeight));
-        rightColShape.setFillColor(themes[0].color_HoverButton);
 
         titleTxt.setFont(font);
         titleTxt.setString("Top Wins");
         titleTxt.setCharacterSize(40);
-        titleTxt.setFillColor(themes[0].color_text);
 
         sf::FloatRect tr = titleTxt.getLocalBounds();
         titleTxt.setOrigin(sf::Vector2f(tr.position.x + tr.size.x / 2.0f, tr.position.y + tr.size.y / 2.0f));
         titleTxt.setPosition(sf::Vector2f(startX + tableWidth / 2.f, startY + headerHeight / 2.f));
 
         LoadLeaderboard();
+        updateColors(); // Initial set
     }
 
     void LoadLeaderboard() {
@@ -126,7 +123,6 @@ struct LeaderboardMenu {
             sf::Text tName(font);
             tName.setString(nameStr);
             tName.setCharacterSize(30);
-            tName.setFillColor(themes[0].color_text);
 
             sf::FloatRect nr = tName.getLocalBounds();
             tName.setOrigin(sf::Vector2f(nr.position.x + nr.size.x / 2.0f, nr.position.y + nr.size.y / 2.0f));
@@ -136,7 +132,6 @@ struct LeaderboardMenu {
             sf::Text tScore(font);
             tScore.setString(scoreStr);
             tScore.setCharacterSize(30);
-            tScore.setFillColor(themes[0].color_text);
 
             sf::FloatRect sr = tScore.getLocalBounds();
             tScore.setOrigin(sf::Vector2f(sr.position.x + sr.size.x / 2.0f, sr.position.y + sr.size.y / 2.0f));
@@ -149,11 +144,10 @@ struct LeaderboardMenu {
         shape.setSize(size);
         shape.setPosition(position);
         shape.setOrigin(origin);
-        shape.setFillColor(themes[0].color_buttons);
+
         text.setFont(font);
         text.setString(label);
         text.setCharacterSize(35);
-        text.setFillColor(themes[0].color_text);
 
         sf::FloatRect textRect = text.getLocalBounds();
         text.setOrigin(sf::Vector2f(
@@ -166,6 +160,29 @@ struct LeaderboardMenu {
             btnBounds.position.x + btnBounds.size.x / 2.0f,
             btnBounds.position.y + btnBounds.size.y / 2.0f
         ));
+    }
+
+    // FUNCTION TO REFRESH COLORS INSTANTLY
+    void updateColors() {
+        sf::Color btnColor = themes[0].color_buttons;
+        sf::Color txtColor = themes[0].color_text;
+        sf::Color hoverColor = themes[0].color_HoverButton;
+
+        back.setFillColor(btnColor);
+        backTxt.setFillColor(txtColor);
+
+        headerShape.setFillColor(btnColor);
+        leftColShape.setFillColor(btnColor);
+        rightColShape.setFillColor(hoverColor);
+
+        titleTxt.setFillColor(txtColor);
+
+        for (auto& txt : nameTexts) {
+            txt.setFillColor(txtColor);
+        }
+        for (auto& txt : scoreTexts) {
+            txt.setFillColor(txtColor);
+        }
     }
 
     void handleInput(const sf::Event& event, sf::RenderWindow& window) {
@@ -184,6 +201,8 @@ struct LeaderboardMenu {
     }
 
     void draw(sf::RenderWindow& window) {
+        updateColors();
+
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 

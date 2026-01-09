@@ -20,6 +20,8 @@ struct LearnMenu {
 
     int currentPageNum = 1;
 
+    sf::Color lastThemeBgColor;
+
     sf::Font font, font2;
 
     std::vector<sf::Texture> pageTextures;
@@ -70,6 +72,9 @@ struct LearnMenu {
         currentPage.setFillColor(sf::Color::Transparent);
 
         loadPage(1);
+
+        // Initialize the tracker
+        lastThemeBgColor = themes[0].color_bg;
     }
 
     void div(sf::RectangleShape& shape, sf::Vector2f size, sf::Vector2f position, sf::Vector2f origin) {
@@ -419,11 +424,30 @@ struct LearnMenu {
         }
     }
 
+    void updateColors() {
+        sf::Color txtColor = themes[0].color_text;
+
+        previousTxt.setFillColor(txtColor);
+        nextTxt.setFillColor(txtColor);
+        currentTxt.setFillColor(txtColor);
+
+        for (auto& text : pageContent) {
+            text.setFillColor(txtColor);
+        }
+    }
+
     void draw(sf::RenderWindow& window) {
+        // DETECT THEME CHANGE
+        if (themes[0].color_bg != lastThemeBgColor) {
+            loadPage(currentPageNum); // Re-generate all text with new colors
+            lastThemeBgColor = themes[0].color_bg; // Update tracker
+        }
+
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
         update(mousePosF, window);
+        updateColors();
 
         window.draw(back);
         window.draw(backTxt);
