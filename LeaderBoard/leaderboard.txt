@@ -1,0 +1,6 @@
+Alex 5
+Andrei 3
+Computer 99
+George 20
+Mihai 12
+stefan 2

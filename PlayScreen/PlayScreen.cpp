@@ -2,6 +2,10 @@
 
 #include <cstdint>
 #include <cstdio>                // snprintf
+#include <fstream>               // Added for file I/O
+#include <map>                   // Added for leaderboard sorting
+#include <string>                // Added for string manipulation
+#include <algorithm>             // Added for std::replace
 #include <SFML/System/Angle.hpp> // sf::degrees (SFML 3)
 #include "../SoundEffects/SoundEffects.hpp"
 #include "../GameConfig.hpp"
@@ -374,6 +378,40 @@ static void initConfetti(sf::RenderWindow& w) {
     g_overClock.restart();
 }
 
+// ----------------------------------------------------------------------------
+//  LOGICA NOUA PENTRU LEADERBOARD
+// ----------------------------------------------------------------------------
+static void saveWinToLeaderboard(std::string name) {
+    if (name.empty()) return;
+
+    // Inlocuiesc spatiile cu underscore pt a nu strica formatul fisierului text
+    std::replace(name.begin(), name.end(), ' ', '_');
+
+    // Citesc fisierul existent intr-un map
+    std::map<std::string, int> scores;
+    std::ifstream fin("LeaderBoard/leaderboard.txt");
+    if (fin.is_open()) {
+        std::string n;
+        int s;
+        while (fin >> n >> s) {
+            scores[n] = s;
+        }
+        fin.close();
+    }
+
+    // Incrementez scorul castigatorului
+    scores[name]++;
+
+    // Rescriu fisierul
+    std::ofstream fout("LeaderBoard/leaderboard.txt");
+    if (fout.is_open()) {
+        for (const auto& pair : scores) {
+            fout << pair.first << " " << pair.second << "\n";
+        }
+        fout.close();
+    }
+}
+
 /*
   Intra in starea de final (phase=over) cu castigator calculat din piese.
 */
@@ -381,6 +419,15 @@ static void enterGameOver(sf::RenderWindow& w) {
     g_phase = PHASE_OVER;
     g_winner = decideWinnerByPieces();
     g_overReason[0] = 0;
+
+    // Daca a castigat un jucator UMAN, salvez victoria
+    if (g_winner == 1 && !g_isComputerWhite) {
+        saveWinToLeaderboard(g_nameWhite);
+    }
+    else if (g_winner == 2 && !g_isComputerBlack) {
+        saveWinToLeaderboard(g_nameBlack);
+    }
+
     initConfetti(w);
 }
 
@@ -391,6 +438,15 @@ static void enterGameOverForced(sf::RenderWindow& w, int winner, const char* rea
     g_phase = PHASE_OVER;
     g_winner = winner;
     strCopy(g_overReason, (int)sizeof(g_overReason), reason);
+
+    // Daca a castigat un jucator UMAN, salvez victoria
+    if (g_winner == 1 && !g_isComputerWhite) {
+        saveWinToLeaderboard(g_nameWhite);
+    }
+    else if (g_winner == 2 && !g_isComputerBlack) {
+        saveWinToLeaderboard(g_nameBlack);
+    }
+
     initConfetti(w);
 }
 
