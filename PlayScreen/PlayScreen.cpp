@@ -512,6 +512,7 @@ static int parseTimeMMSS(const char s[6]) {
     if (s[4] < '0' || s[4] > '9') return 0;
     int mm = (s[0] - '0') * 10 + (s[1] - '0');
     int ss = (s[3] - '0') * 10 + (s[4] - '0');
+    if (mm > 59) mm = 59;
     if (ss > 59) ss = 59;
     return mm * 60 + ss;
 }
@@ -603,14 +604,14 @@ static void applyModeAndPrepareNames(GameMode mode) {
 
     // nume default pentru computer
     if (g_isComputerWhite) {
-        strCopy(g_nameWhite, 24, "Computer Alb");
+        strCopy(g_nameWhite, 24, "AI1");
         g_lenWhite = 0;
-        while (g_nameWhite[g_lenWhite] != 0 && g_lenWhite < 23) g_lenWhite++;
+        while (g_nameWhite[g_lenWhite] != 0 && g_lenWhite < 8) g_lenWhite++;
     }
     if (g_isComputerBlack) {
-        strCopy(g_nameBlack, 24, "Computer Negru");
+        strCopy(g_nameBlack, 24, "AI2");
         g_lenBlack = 0;
-        while (g_nameBlack[g_lenBlack] != 0 && g_lenBlack < 23) g_lenBlack++;
+        while (g_nameBlack[g_lenBlack] != 0 && g_lenBlack < 8) g_lenBlack++;
     }
 
     // activeName: primul camp editabil
@@ -626,13 +627,13 @@ static void applyModeAndPrepareNames(GameMode mode) {
 static void appendCharToName(int which, char ch) {
     if (which == 0) {
         if (g_isComputerWhite) return;
-        if (g_lenWhite >= 23) return;
+        if (g_lenWhite >= 8) return;
         g_nameWhite[g_lenWhite++] = ch;
         g_nameWhite[g_lenWhite] = '\0';
     }
     else {
         if (g_isComputerBlack) return;
-        if (g_lenBlack >= 23) return;
+        if (g_lenBlack >= 8) return;
         g_nameBlack[g_lenBlack++] = ch;
         g_nameBlack[g_lenBlack] = '\0';
     }
@@ -656,15 +657,25 @@ static void backspaceName(int which) {
 
 /*
   Dupa nume, trec in ecranul de optiuni.
-  Daca un nume uman e gol, pun P1 / P2.
+  Daca un nume uman e gol, pun Player1 / Player2.
 */
 static void goToOptionsFromNames() {
     if (!g_isComputerWhite && g_lenWhite == 0) {
         appendCharToName(0, 'P');
+        appendCharToName(0, 'l');
+        appendCharToName(0, 'a');
+        appendCharToName(0, 'y');
+        appendCharToName(0, 'e');
+        appendCharToName(0, 'r');
         appendCharToName(0, '1');
     }
     if (!g_isComputerBlack && g_lenBlack == 0) {
         appendCharToName(1, 'P');
+        appendCharToName(1, 'l');
+        appendCharToName(1, 'a');
+        appendCharToName(1, 'y');
+        appendCharToName(1, 'e');
+        appendCharToName(1, 'r');
         appendCharToName(1, '2');
     }
 
@@ -1298,7 +1309,7 @@ static void drawNameEntry(sf::RenderWindow& w) {
         }
     }
 
-    g_hint.setString("Taste: scrie nume, TAB schimba campul, ENTER continua, BACKSPACE sterge, B inapoi, ESC meniu");
+    g_hint.setString("Taste: TAB schimba campul, ENTER continua, BACKSPACE sterge, B inapoi, ESC meniu");
     g_hint.setPosition({ px + 40.f, py + 360.f });
     w.draw(g_hint);
 }
@@ -1618,6 +1629,16 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
                 // Vreau ca ENTER sa treaca de la ALB la NEGRU, iar apoi sa porneasca ecranul de optiuni.
                 // In modurile unde exista un singur jucator uman, ENTER duce direct la optiuni.
                 if (g_activeName == 0) {
+                    // If white player name is empty, populate with default "Player1"
+                    if (!g_isComputerWhite && g_lenWhite == 0) {
+                        appendCharToName(0, 'P');
+                        appendCharToName(0, 'l');
+                        appendCharToName(0, 'a');
+                        appendCharToName(0, 'y');
+                        appendCharToName(0, 'e');
+                        appendCharToName(0, 'r');
+                        appendCharToName(0, '1');
+                    }
                     if (!g_isComputerBlack) {
                         g_activeName = 1;
                         return;
@@ -1627,6 +1648,16 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
                 }
 
                 if (g_activeName == 1) {
+                    // If black player name is empty, populate with default "Player2"
+                    if (!g_isComputerBlack && g_lenBlack == 0) {
+                        appendCharToName(1, 'P');
+                        appendCharToName(1, 'l');
+                        appendCharToName(1, 'a');
+                        appendCharToName(1, 'y');
+                        appendCharToName(1, 'e');
+                        appendCharToName(1, 'r');
+                        appendCharToName(1, '2');
+                    }
                     goToOptionsFromNames();
                     return;
                 }
@@ -1689,14 +1720,41 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
 
             char32_t u = te->unicode;
             if (u >= '0' && u <= '9') {
-                audio.playKey();
-                g_turnTimeStr[g_turnTimeCursor] = (char)u;
+                char digit = (char)u;
+                bool valid = false;
 
-                // avans cursor: 0->1->3->4->0...
-                if (g_turnTimeCursor == 0) g_turnTimeCursor = 1;
-                else if (g_turnTimeCursor == 1) g_turnTimeCursor = 3;
-                else if (g_turnTimeCursor == 3) g_turnTimeCursor = 4;
-                else g_turnTimeCursor = 0;
+                // Validate based on cursor position
+                if (g_turnTimeCursor == 0) {
+                    // First minute digit: only 0-5
+                    valid = (digit >= '0' && digit <= '5');
+                }
+                else if (g_turnTimeCursor == 1) {
+                    // Second minute digit: check if total minutes would be valid (00-59)
+                    int firstMin = g_turnTimeStr[0] - '0';
+                    int totalMin = firstMin * 10 + (digit - '0');
+                    valid = (totalMin <= 59);
+                }
+                else if (g_turnTimeCursor == 3) {
+                    // First second digit: only 0-5
+                    valid = (digit >= '0' && digit <= '5');
+                }
+                else if (g_turnTimeCursor == 4) {
+                    // Second second digit: check if total seconds would be valid (00-59)
+                    int firstSec = g_turnTimeStr[3] - '0';
+                    int totalSec = firstSec * 10 + (digit - '0');
+                    valid = (totalSec <= 59);
+                }
+
+                if (valid) {
+                    audio.playKey();
+                    g_turnTimeStr[g_turnTimeCursor] = digit;
+
+                    // avans cursor: 0->1->3->4->0...
+                    if (g_turnTimeCursor == 0) g_turnTimeCursor = 1;
+                    else if (g_turnTimeCursor == 1) g_turnTimeCursor = 3;
+                    else if (g_turnTimeCursor == 3) g_turnTimeCursor = 4;
+                    else g_turnTimeCursor = 0;
+                }
             }
             return;
         }
