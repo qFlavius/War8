@@ -7,6 +7,7 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
+#include "../lang/Translations.hpp"
 
 struct GameMenu {
     AudioMenu audio;
@@ -67,10 +68,7 @@ struct GameMenu {
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
-        labels = {
-            "Razboi in 8", "", "", "Play", "Learn", "Leaderboard",
-            "", "", "Themes", "Settings"
-        };
+        updateLabels();
 
         float btnWidth = 543.f;
         float btnHeight = 108.f;
@@ -97,6 +95,7 @@ struct GameMenu {
     }
 
     void draw(sf::RenderWindow& window) {
+        updateLabels();
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
@@ -155,42 +154,98 @@ struct GameMenu {
 
         for (const auto& rect : buttons) window.draw(rect);
 
-        for (auto& txt : texts) {
-            txt.setFillColor(themes[0].color_text);
-            window.draw(txt);
+        for (size_t i = 0; i < texts.size() && i < labels.size(); ++i) {
+            if (!labels[i].empty()) {
+                texts[i].setFillColor(themes[0].color_text);
+                window.draw(texts[i]);
+            }
+        }
+    }
+
+    void updateLabels() {
+        labels = {
+            GetTranslation(TR_MENU_TITLE), "", "", 
+            GetTranslation(TR_MENU_PLAY), 
+            GetTranslation(TR_MENU_LEARN), 
+            GetTranslation(TR_MENU_LEADERBOARD),
+            "", "", 
+            "Themes", 
+            GetTranslation(TR_MENU_SETTINGS)
+        };
+        
+        while (texts.size() < labels.size()) {
+            sf::Text txt(font);
+            texts.push_back(txt);
+        }
+        
+        for (size_t i = 0; i < labels.size(); ++i) {
+            texts[i].setString(labels[i]);
+            texts[i].setFont(font);
+            
+            if (!labels[i].empty()) {
+                texts[i].setCharacterSize(i == 0 ? 36 : 28);
+                
+                sf::FloatRect textRect = texts[i].getLocalBounds();
+                texts[i].setOrigin(sf::Vector2f(textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f));
+                
+                if (i < buttons.size()) {
+                    sf::FloatRect btnRect = buttons[i].getGlobalBounds();
+                    texts[i].setPosition(sf::Vector2f(btnRect.position.x + btnRect.size.x / 2.0f, btnRect.position.y + btnRect.size.y / 2.0f));
+                } else {
+                    float btnWidth = 543.f;
+                    float btnHeight = 108.f;
+                    float btnX = btnWidth / 2.0f;
+                    float btnY = btnHeight * static_cast<float>(i) + btnHeight / 2.0f;
+                    texts[i].setPosition(sf::Vector2f(btnX, btnY));
+                }
+            } else {
+                texts[i].setString("");
+                texts[i].setCharacterSize(28);
+                texts[i].setOrigin(sf::Vector2f(0.f, 0.f));
+                texts[i].setPosition(sf::Vector2f(-1000.f, -1000.f)); 
+            }
         }
     }
 
     void handleInput(const sf::Event& event, sf::RenderWindow& window) {
+        if (const auto* k = event.getIf<sf::Event::KeyPressed>()) {
+            if (k->code == sf::Keyboard::Key::Escape) {
+                audio.playClick();
+                window.close();
+                return;
+            }
+        }
+        
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
 
                 sf::Vector2i mousePos = sf::Mouse::getPosition(window);
                 sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
 
-                for (size_t i = 0; i < buttons.size(); ++i) {
+                    for (size_t i = 0; i < buttons.size(); ++i) {
                     if (buttons[i].getGlobalBounds().contains(mousePosF)) {
-                        if (labels[i] == "Play") {
+                        std::string label = labels[i];
+                        if (label == GetTranslation(TR_MENU_PLAY) || label == "Play" || label == "Joc") {
                             audio.playClick();
                             interfata = 2;
                         }
-                        else if (labels[i] == "Learn") {
+                        else if (label == GetTranslation(TR_MENU_LEARN) || label == "Learn" || label == "Invatare") {
                             audio.playClick();
                             interfata = 3;
                         }
-                        else if (labels[i] == "Leaderboard") {
+                        else if (label == GetTranslation(TR_MENU_LEADERBOARD) || label == "Leaderboard" || label == "Clasament") {
                             audio.playClick();
                             interfata = 5;
                         }
-                        else if (labels[i] == "Themes") {
+                        else if (label == "Themes") {
                             audio.playClick();
                             interfata = 7;
                         }
-                        else if (labels[i] == "Settings") {
+                        else if (label == GetTranslation(TR_MENU_SETTINGS) || label == "Settings" || label == "Setari") {
                             audio.playClick();
                             interfata = 8;
                         }
-                        else if (labels[i] == "Exit") {
+                        else if (label == GetTranslation(TR_MENU_EXIT) || label == "Exit" || label == "Iesire") {
                             audio.playClick();
                             window.close();
                         }

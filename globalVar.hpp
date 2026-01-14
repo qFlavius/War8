@@ -1,10 +1,12 @@
 #pragma once
 #include <SFML/Audio.hpp>
+#include "lang/Translations.hpp"
 
 extern int interfata;
 extern std::string Music;
 extern std::string soundEffects;
 extern std::string fps;
+extern std::string language;
 
 extern sf::Music bgMusic;
 

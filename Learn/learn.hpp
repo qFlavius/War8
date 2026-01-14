@@ -8,6 +8,7 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
+#include "../lang/Translations.hpp"
 
 struct LearnMenu {
     AudioMenu audio;
@@ -21,6 +22,7 @@ struct LearnMenu {
     int currentPageNum = 1;
 
     sf::Color lastThemeBgColor;
+    std::string lastLanguage;
 
     sf::Font font, font2;
 
@@ -64,7 +66,7 @@ struct LearnMenu {
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
-        button(back, backTxt, "Back", sf::Vector2f(543.f, 108.f), sf::Vector2f(0.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
+        button(back, backTxt, std::string(GetTranslation(TR_LEARN_BACK)), sf::Vector2f(543.f, 108.f), sf::Vector2f(0.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
 
         button(currentPage, currentTxt, "1/5", sf::Vector2f(543.f, 108.f), sf::Vector2f(SCREEN_W, SCREEN_H), sf::Vector2f(543.f, 108.f));
         button(previousPage, previousTxt, "<", sf::Vector2f(206.f, 108.f), sf::Vector2f(SCREEN_W - 543.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
@@ -73,8 +75,8 @@ struct LearnMenu {
 
         loadPage(1);
 
-        // Initialize the tracker
         lastThemeBgColor = themes[0].color_bg;
+        lastLanguage = language;
     }
 
     void div(sf::RectangleShape& shape, sf::Vector2f size, sf::Vector2f position, sf::Vector2f origin) {
@@ -250,22 +252,17 @@ struct LearnMenu {
         getPageLayout(startX, currentY, maxWidth);
         float initialY = currentY;
 
-        addMixedBlock("\t\"Razboi in 8\"", " este un joc de strategie rationala, similar cu sahul sau damele, dar cu un mecanism unic de capturare a pieselor. Scopul nu este sa sari peste piese, ci sa le incercuiesti si sa le blochezi.", startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE1_INTRO), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         currentY += 40.f;
-        addBlock("1. Obiectivul Jocului", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE1_OBJECTIVE_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock("\tScopul principal este sa scoti din lupta \"armata\" adversa. Castiga jucatorul care reuseste sa elimine mai multe piese ale adversarului, adica cel care ramane cu mai multe piese pe tabla la finalul jocului.", BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE1_OBJECTIVE), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         currentY += 40.f;
-        addBlock("2. Pregatirea Jocului (Setup)", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE1_SETUP_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock(
-            "\tTabla: Se foloseste o tabla standard de sah (8x8 patratele).\n"
-            "\tPiesele: Fiecare jucator are cate 8 piese (pioni), de culori diferite (Alb si Negru).\n"
-            "\tAsezarea initiala: Piesele se aseaza pe primele doua randuri ale fiecarui jucator, dar numai pe patratelele de aceeasi culoare (de exemplu, doar pe cele negre sau doar pe cele albe), lasand un spatiu \"tampon\" intre armate.",
-            BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth
-        );
+        addBlock(GetTranslation(TR_LEARN_PAGE1_SETUP), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         centerContent(initialY, currentY);
     }
@@ -275,14 +272,9 @@ struct LearnMenu {
         getPageLayout(startX, currentY, maxWidth);
         float initialY = currentY;
 
-        addBlock("3. Cum se muta piesele", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE2_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock(
-            "\tJucatorii muta alternativ, cate o singura piesa per tura.\n"
-            "\tRegula de baza: O piesa se poate muta un singur patratel, doar pe diagonala.\n"
-            "\tDirectia: Spre deosebire de jocul de dame clasic, in \"Razboi in 8\" piesa se poate deplasa in orice directie si sens (atat inainte, cat si inapoi), atata timp cat patratelul vecin de pe diagonala este liber.",
-            BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth
-        );
+        addBlock(GetTranslation(TR_LEARN_PAGE2_MOVEMENT), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         centerContent(initialY, currentY);
     }
@@ -292,15 +284,9 @@ struct LearnMenu {
         getPageLayout(startX, currentY, maxWidth);
         float initialY = currentY;
 
-        addBlock("4. Eliminarea Pieselor (Regula Prizonieratului)", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE3_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock(
-            "\tAcesta este elementul tactic principal al jocului. O piesa nu este capturata prin saritura, ci prin blocare.\n"
-            "\tCand este o piesa eliminata? O piesa este considerata \"blocata\" (facuta prizoniera) daca nu mai are nicio mutare legala disponibila. Asta inseamna ca toate patratelele vecine de pe diagonala sunt ocupate fie de piese proprii, fie de piese adverse, fie de marginea tablei.\n"
-            "\tScoaterea din joc: In momentul in care o piesa a fost blocata in urma mutarii adversarului (sau chiar a propriei mutari neispirate), ea este scoasa imediat de pe tabla si nu mai reintra in joc.\n\n"
-            "\tExemplu: Daca o piesa alba muta si ocupa singurul patratel liber de langa o piesa neagra, piesa neagra este blocata si eliminata.",
-            BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth
-        );
+        addBlock(GetTranslation(TR_LEARN_PAGE3_CAPTURE), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         centerContent(initialY, currentY);
     }
@@ -310,13 +296,9 @@ struct LearnMenu {
         getPageLayout(startX, currentY, maxWidth);
         float initialY = currentY;
 
-        addBlock("5. Reguli Speciale si Strategie", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE4_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock(
-            "\tDebutul (Primele mutari): La inceputul jocului, piesele de pe ultimul rand al fiecarui jucator sunt tehnic \"blocate\" de propriile piese din fata. Totusi, ele nu se elimina la start. Se recomanda ca in primele 4 mutari sa nu se aplice regula eliminarii, pentru a permite jucatorilor sa-si dezvolte pozitia si sa-si deblocheze propriile piese.\n"
-            "\tEvitarea Blocajului (Non-sens): Uneori, jucatorii pot crea un \"zid\" median pe care nimeni nu-l poate strapunge (o dezvoltare simetrica si pasiva), ducand la un joc plictisitor sau la remiza. Jucatorii sunt incurajati sa joace ofensiv pentru a evita aceste situatii de \"pat\".",
-            BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth
-        );
+        addBlock(GetTranslation(TR_LEARN_PAGE4_RULES), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
         centerContent(initialY, currentY);
     }
@@ -326,13 +308,13 @@ struct LearnMenu {
         getPageLayout(startX, currentY, maxWidth);
         float initialY = currentY;
 
-        addBlock("6. Finalul Jocului", HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE5_TITLE), HEADER_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addBlock("Partida se poate incheia in doua moduri:", BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
+        addBlock(GetTranslation(TR_LEARN_PAGE5_END), BODY_FONT_SIZE, themes[0].color_text, startX, currentY, maxWidth);
 
-        addMixedBlock("\tVictorie:", " Un jucator a eliminat toate piesele adversarului sau adversarul cedeaza.", startX, currentY, maxWidth);
+        addMixedBlock(GetTranslation(TR_LEARN_PAGE5_VICTORY), GetTranslation(TR_LEARN_PAGE5_VICTORY_DESC), startX, currentY, maxWidth);
 
-        addMixedBlock("\tScor/Limita de timp:", " Deoarece partidele pot fi lungi, se poate stabili o limita de mutari (ex: 50 de mutari). Dupa expirarea limitei, castiga jucatorul care a ramas cu cele mai multe piese pe tabla.", startX, currentY, maxWidth);
+        addMixedBlock(GetTranslation(TR_LEARN_PAGE5_SCORE), GetTranslation(TR_LEARN_PAGE5_SCORE_DESC), startX, currentY, maxWidth);
 
         centerContent(initialY, currentY);
     }
@@ -424,6 +406,22 @@ struct LearnMenu {
         }
     }
 
+    void updateTexts() {
+        backTxt.setString(GetTranslation(TR_LEARN_BACK));
+        sf::FloatRect textRect = backTxt.getLocalBounds();
+        backTxt.setOrigin(sf::Vector2f(
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+        ));
+        sf::FloatRect btnBounds = back.getGlobalBounds();
+        backTxt.setPosition(sf::Vector2f(
+            btnBounds.position.x + btnBounds.size.x / 2.0f,
+            btnBounds.position.y + btnBounds.size.y / 2.0f
+        ));
+        
+        loadPage(currentPageNum);
+    }
+
     void updateColors() {
         sf::Color txtColor = themes[0].color_text;
 
@@ -437,10 +435,12 @@ struct LearnMenu {
     }
 
     void draw(sf::RenderWindow& window) {
-        // DETECT THEME CHANGE
-        if (themes[0].color_bg != lastThemeBgColor) {
-            loadPage(currentPageNum); // Re-generate all text with new colors
+        // DETECT THEME OR LANGUAGE CHANGE
+        if (themes[0].color_bg != lastThemeBgColor || language != lastLanguage) {
+            loadPage(currentPageNum); // Re-generate all text with new colors/language
             lastThemeBgColor = themes[0].color_bg; // Update tracker
+            lastLanguage = language; // Update language tracker
+            updateTexts(); // Update button texts
         }
 
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);

@@ -13,17 +13,27 @@
 #include "LeaderBoard/leaderboard.hpp"
 #include "Settings/settings.hpp"
 #include "AI/AIPlayer.hpp"
+#include "lang/Translations.hpp"
 
 // variabila globala folosita in tot proiectul
 int interfata = 1;
 std::string Music = "";
 std::string soundEffects = "";
 std::string fps = "";
+std::string language = "EN";
 sf::Music bgMusic;
 
 int main()
 {
     LoadPlayerData();
+    
+    InitTranslations();
+    if (language == "RO") {
+        SetTranslationLanguage(Romanian);
+    } else {
+        SetTranslationLanguage(English);
+    }
+    
     Themes();
 
     if (!bgMusic.openFromFile("Themes/song.mp3")) {
@@ -38,7 +48,10 @@ int main()
         }
     }
 
-    sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), "Razboi in 8");
+    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    
+    sf::RenderWindow window;
+    window.create(desktopMode, "Razboi in 8", sf::Style::Default, sf::State::Fullscreen);
     window.setFramerateLimit(60);
 
     // Initializeaza seed-ul pentru generatorul de numere pseudo-aleatoare al calculatorului.

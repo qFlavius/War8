@@ -8,6 +8,7 @@
 #include "../globalVar.hpp"
 #include "../Profile/playerData.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
+#include "../lang/Translations.hpp"
 
 struct GameThemes {
     AudioMenu audio;
@@ -113,7 +114,7 @@ struct GameThemes {
         selectButton1.setPosition({ center.x - offsetX, themeLabel.getPosition().y });
 
         themeName.setFillColor(sf::Color::Black);
-        themeName.setString("Default");
+        themeName.setString(GetTranslation(TR_THEMES_DEFAULT));
         themeName.setCharacterSize(60);
         sf::FloatRect textRect = themeName.getLocalBounds();
         themeName.setOrigin({
@@ -126,7 +127,7 @@ struct GameThemes {
             });
 
         selectBtn.setFillColor(sf::Color::Black);
-        selectBtn.setString("Select");
+        selectBtn.setString(GetTranslation(TR_THEMES_SELECT));
         selectBtn.setCharacterSize(35);
         textRect = selectBtn.getLocalBounds();
         selectBtn.setOrigin({
@@ -169,7 +170,7 @@ struct GameThemes {
         selectButton1_2.setPosition({ center.x - offsetX, themeLabel_2.getPosition().y });
 
         themeName_2.setFillColor(sf::Color::White);
-        themeName_2.setString("B & W");
+        themeName_2.setString(GetTranslation(TR_THEMES_BW));
         themeName_2.setCharacterSize(60);
         textRect = themeName_2.getLocalBounds();
         themeName_2.setOrigin({
@@ -182,7 +183,7 @@ struct GameThemes {
             });
 
         selectBtn_2.setFillColor(sf::Color::White);
-        selectBtn_2.setString("Select");
+        selectBtn_2.setString(GetTranslation(TR_THEMES_SELECT));
         selectBtn_2.setCharacterSize(35);
         textRect = selectBtn_2.getLocalBounds();
         selectBtn_2.setOrigin({
@@ -225,7 +226,7 @@ struct GameThemes {
         selectButton1_3.setPosition({ center.x - offsetX, themeLabel_3.getPosition().y });
 
         themeName_3.setFillColor(sf::Color::White);
-        themeName_3.setString("Default Dark");
+        themeName_3.setString(GetTranslation(TR_THEMES_DEFAULT_DARK));
         themeName_3.setCharacterSize(60);
         textRect = themeName_3.getLocalBounds();
         themeName_3.setOrigin({
@@ -238,7 +239,7 @@ struct GameThemes {
             });
 
         selectBtn_3.setFillColor(sf::Color::White);
-        selectBtn_3.setString("Select");
+        selectBtn_3.setString(GetTranslation(TR_THEMES_SELECT));
         selectBtn_3.setCharacterSize(35);
         textRect = selectBtn_3.getLocalBounds();
         selectBtn_3.setOrigin({
@@ -281,7 +282,7 @@ struct GameThemes {
         selectButton1_4.setPosition({ center.x - offsetX, themeLabel_4.getPosition().y });
 
         themeName_4.setFillColor(sf::Color::Black);
-        themeName_4.setString("Custom");
+        themeName_4.setString(GetTranslation(TR_THEMES_CUSTOM));
         themeName_4.setCharacterSize(60);
         textRect = themeName_4.getLocalBounds();
         themeName_4.setOrigin({
@@ -294,7 +295,7 @@ struct GameThemes {
             });
 
         selectBtn_4.setFillColor(sf::Color::Black);
-        selectBtn_4.setString("Select");
+        selectBtn_4.setString(GetTranslation(TR_THEMES_SELECT));
         selectBtn_4.setCharacterSize(35);
         textRect = selectBtn_4.getLocalBounds();
         selectBtn_4.setOrigin({
@@ -309,7 +310,7 @@ struct GameThemes {
         back.setFillColor(themes[0].color_buttons);
 
         backTxt.setFillColor(themes[0].color_text);
-        backTxt.setString("Back");
+        backTxt.setString(GetTranslation(TR_THEMES_BACK));
         backTxt.setCharacterSize(35);
 
         textRect = backTxt.getLocalBounds();
@@ -378,7 +379,7 @@ struct GameThemes {
             });
 
         selectBtn_5.setFillColor(sf::Color::Black);
-        selectBtn_5.setString("Confirm");
+        selectBtn_5.setString(GetTranslation(TR_THEMES_CONFIRM));
         selectBtn_5.setCharacterSize(35);
         textRect = selectBtn_5.getLocalBounds();
         selectBtn_5.setOrigin({
@@ -494,6 +495,62 @@ struct GameThemes {
 
     void pop_Up() {
         popUp = true;
+    }
+
+    void updateTexts() {
+        // Update back button text
+        backTxt.setString(GetTranslation(TR_THEMES_BACK));
+        sf::FloatRect textRect = backTxt.getLocalBounds();
+        backTxt.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        sf::FloatRect btnBounds = back.getGlobalBounds();
+        backTxt.setPosition({
+            btnBounds.position.x + btnBounds.size.x / 2.0f,
+            btnBounds.position.y + btnBounds.size.y / 2.0f
+            });
+
+        // Update select button texts
+        selectBtn.setString(GetTranslation(TR_THEMES_SELECT));
+        textRect = selectBtn.getLocalBounds();
+        selectBtn.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        selectBtn.setPosition(selectButton1.getGlobalBounds().getCenter());
+
+        selectBtn_2.setString(GetTranslation(TR_THEMES_SELECT));
+        textRect = selectBtn_2.getLocalBounds();
+        selectBtn_2.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        selectBtn_2.setPosition(selectButton1_2.getGlobalBounds().getCenter());
+
+        selectBtn_3.setString(GetTranslation(TR_THEMES_SELECT));
+        textRect = selectBtn_3.getLocalBounds();
+        selectBtn_3.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        selectBtn_3.setPosition(selectButton1_3.getGlobalBounds().getCenter());
+
+        selectBtn_4.setString(GetTranslation(TR_THEMES_SELECT));
+        textRect = selectBtn_4.getLocalBounds();
+        selectBtn_4.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        selectBtn_4.setPosition(selectButton1_4.getGlobalBounds().getCenter());
+
+        selectBtn_5.setString(GetTranslation(TR_THEMES_CONFIRM));
+        textRect = selectBtn_5.getLocalBounds();
+        selectBtn_5.setOrigin({
+            textRect.position.x + textRect.size.x / 2.0f,
+            textRect.position.y + textRect.size.y / 2.0f
+            });
+        selectBtn_5.setPosition(selectButton1_5.getGlobalBounds().getCenter());
     }
 
     void handleInput(const sf::Event& event, sf::RenderWindow& window) {

@@ -12,6 +12,7 @@
 #include "../GameConfig.hpp"
 #include "../AI/AIPlayer.hpp"
 #include "../Themes/themesRead.h" // Added to access themes[0]
+#include "../lang/Translations.hpp"
 
 // ============================================================================
 //  PLAYSCREEN
@@ -1079,7 +1080,13 @@ static void drawHUD(sf::RenderWindow& w) {
     // textul cu numele jucatorului care este in tura (centrat deasupra tablei)
     {
         const char* whoName = (g_turn == 1) ? g_nameWhite : g_nameBlack;
-        if (whoName[0] == 0) whoName = (g_turn == 1) ? "ALB" : "NEGRU";
+        if (whoName[0] == 0) {
+            static char whiteLabelBuf[16];
+            static char blackLabelBuf[16];
+            strCopy(whiteLabelBuf, 16, GetTranslation(TR_HUD_WHITE));
+            strCopy(blackLabelBuf, 16, GetTranslation(TR_HUD_BLACK));
+            whoName = (g_turn == 1) ? whiteLabelBuf : blackLabelBuf;
+        }
 
         g_hudTurn.setString(whoName);
 
@@ -1131,8 +1138,10 @@ static void drawHUD(sf::RenderWindow& w) {
         w.draw(bg);
 
         char buf[256];
-        std::snprintf(buf, sizeof(buf), "ALB\n%s\nPiese: %d\nCapturi: %d",
-            g_nameWhite, wPieces, g_capturedByWhite);
+        std::snprintf(buf, sizeof(buf), "%s\n%s\n%s %d\n%s %d",
+            GetTranslation(TR_HUD_WHITE), g_nameWhite, 
+            GetTranslation(TR_HUD_PIECES), wPieces, 
+            GetTranslation(TR_HUD_CAPTURES), g_capturedByWhite);
         g_hudLeft.setString(buf);
         g_hudLeft.setPosition({ bg.getPosition().x + 16.f, bg.getPosition().y + 14.f });
         w.draw(g_hudLeft);
@@ -1148,8 +1157,10 @@ static void drawHUD(sf::RenderWindow& w) {
         w.draw(bg);
 
         char buf[256];
-        std::snprintf(buf, sizeof(buf), "NEGRU\n%s\nPiese: %d\nCapturi: %d",
-            g_nameBlack, bPieces, g_capturedByBlack);
+        std::snprintf(buf, sizeof(buf), "%s\n%s\n%s %d\n%s %d",
+            GetTranslation(TR_HUD_BLACK), g_nameBlack,
+            GetTranslation(TR_HUD_PIECES), bPieces,
+            GetTranslation(TR_HUD_CAPTURES), g_capturedByBlack);
         g_hudRight.setString(buf);
         g_hudRight.setPosition({ bg.getPosition().x + 16.f, bg.getPosition().y + 14.f });
         w.draw(g_hudRight);
@@ -1199,6 +1210,7 @@ static void drawModeSelect(sf::RenderWindow& w) {
     float H = (float)sz.y;
 
     sf::RectangleShape dim({ W, H });
+    dim.setPosition({ 0.f, 0.f });
     dim.setFillColor(sf::Color(0, 0, 0, 60));
     w.draw(dim);
 
@@ -1212,7 +1224,7 @@ static void drawModeSelect(sf::RenderWindow& w) {
     float px = panel.getPosition().x;
     float py = panel.getPosition().y;
 
-    g_title.setString("Alege modul de joc");
+    g_title.setString(GetTranslation(TR_MODE_SELECT_TITLE));
     g_title.setPosition({ px + 40.f, py + 30.f });
     w.draw(g_title);
 
@@ -1220,11 +1232,11 @@ static void drawModeSelect(sf::RenderWindow& w) {
     sf::FloatRect b2({ px + 40.f, py + 230.f }, { 740.f, 80.f });
     sf::FloatRect b3({ px + 40.f, py + 330.f }, { 740.f, 80.f });
 
-    drawButton(w, b1, "1) Player vs Player", (g_mode == GameMode::PvP), mouseInRect(w, b1));
-    drawButton(w, b2, "2) Player vs Computer", (g_mode == GameMode::PvC), mouseInRect(w, b2));
-    drawButton(w, b3, "3) Computer vs Computer", (g_mode == GameMode::CvC), mouseInRect(w, b3));
+    drawButton(w, b1, GetTranslation(TR_MODE_PVP), (g_mode == GameMode::PvP), mouseInRect(w, b1));
+    drawButton(w, b2, GetTranslation(TR_MODE_PVC), (g_mode == GameMode::PvC), mouseInRect(w, b2));
+    drawButton(w, b3, GetTranslation(TR_MODE_CVC), (g_mode == GameMode::CvC), mouseInRect(w, b3));
 
-    g_hint.setString("Click pe un mod sau tastele 1/2/3. ENTER continua. ESC meniu");
+    g_hint.setString(GetTranslation(TR_MODE_HINT));
     g_hint.setPosition({ px + 40.f, py + 440.f });
     w.draw(g_hint);
 }
@@ -1241,6 +1253,7 @@ static void drawNameEntry(sf::RenderWindow& w) {
     float H = (float)sz.y;
 
     sf::RectangleShape dim({ W, H });
+    dim.setPosition({ 0.f, 0.f });
     dim.setFillColor(sf::Color(0, 0, 0, 60));
     w.draw(dim);
 
@@ -1254,15 +1267,15 @@ static void drawNameEntry(sf::RenderWindow& w) {
     float px = panel.getPosition().x;
     float py = panel.getPosition().y;
 
-    g_title.setString("Introdu numele");
+    g_title.setString(GetTranslation(TR_NAME_ENTRY_TITLE));
     g_title.setPosition({ px + 40.f, py + 30.f });
     w.draw(g_title);
 
-    g_labelWhite.setString("ALB:");
+    g_labelWhite.setString(GetTranslation(TR_NAME_WHITE));
     g_labelWhite.setPosition({ px + 40.f, py + 120.f });
     w.draw(g_labelWhite);
 
-    g_labelBlack.setString("NEGRU:");
+    g_labelBlack.setString(GetTranslation(TR_NAME_BLACK));
     g_labelBlack.setPosition({ px + 40.f, py + 230.f });
     w.draw(g_labelBlack);
 
@@ -1309,7 +1322,7 @@ static void drawNameEntry(sf::RenderWindow& w) {
         }
     }
 
-    g_hint.setString("Taste: TAB schimba campul, ENTER continua, BACKSPACE sterge, B inapoi, ESC meniu");
+    g_hint.setString(GetTranslation(TR_NAME_HINT));
     g_hint.setPosition({ px + 40.f, py + 360.f });
     w.draw(g_hint);
 }
@@ -1325,6 +1338,7 @@ static void drawOptions(sf::RenderWindow& w) {
     float H = (float)sz.y;
 
     sf::RectangleShape dim({ W, H });
+    dim.setPosition({ 0.f, 0.f });
     dim.setFillColor(sf::Color(0, 0, 0, 60));
     w.draw(dim);
 
@@ -1338,13 +1352,13 @@ static void drawOptions(sf::RenderWindow& w) {
     float px = panel.getPosition().x;
     float py = panel.getPosition().y;
 
-    g_title.setString("Optiuni joc");
+    g_title.setString(GetTranslation(TR_OPTIONS_TITLE));
     g_title.setPosition({ px + 40.f, py + 30.f });
     w.draw(g_title);
 
     // timer toggle
     sf::FloatRect timerBtn({ px + 40.f, py + 120.f }, { 360.f, 70.f });
-    drawButton(w, timerBtn, g_useTurnTimer ? "Timer pe tura: ON" : "Timer pe tura: OFF", g_useTurnTimer, mouseInRect(w, timerBtn));
+    drawButton(w, timerBtn, g_useTurnTimer ? GetTranslation(TR_OPTIONS_TIMER_ON) : GetTranslation(TR_OPTIONS_TIMER_OFF), g_useTurnTimer, mouseInRect(w, timerBtn));
 
     // time box
     sf::FloatRect timeBox({ px + 420.f, py + 120.f }, { 220.f, 70.f });
@@ -1388,8 +1402,8 @@ static void drawOptions(sf::RenderWindow& w) {
     if (g_isComputerWhite) {
         sf::FloatRect dW({ px + 40.f, y }, { 600.f, 70.f });
         const char* label = (g_diffWhite == Difficulty::Easy)
-            ? "Computer Alb: Easy"
-            : "Computer Alb: Hard";
+            ? GetTranslation(TR_OPTIONS_COMPUTER_WHITE_EASY)
+            : GetTranslation(TR_OPTIONS_COMPUTER_WHITE_HARD);
         drawButton(w, dW, label, true, mouseInRect(w, dW));
         y += 90.f;
     }
@@ -1397,8 +1411,8 @@ static void drawOptions(sf::RenderWindow& w) {
     if (g_isComputerBlack) {
         sf::FloatRect dB({ px + 40.f, y }, { 600.f, 70.f });
         const char* label = (g_diffBlack == Difficulty::Easy)
-            ? "Computer Negru: Easy"
-            : "Computer Negru: Hard";
+            ? GetTranslation(TR_OPTIONS_COMPUTER_BLACK_EASY)
+            : GetTranslation(TR_OPTIONS_COMPUTER_BLACK_HARD);
         drawButton(w, dB, label, true, mouseInRect(w, dB));
         y += 90.f;
     }
@@ -1406,10 +1420,10 @@ static void drawOptions(sf::RenderWindow& w) {
     // butoane Start / Back
     sf::FloatRect backBtn({ px + 40.f, py + 460.f }, { 220.f, 70.f });
     sf::FloatRect startBtn({ px + 660.f, py + 460.f }, { 220.f, 70.f });
-    drawButton(w, backBtn, "B) Inapoi", false, mouseInRect(w, backBtn));
-    drawButton(w, startBtn, "ENTER) Start", true, mouseInRect(w, startBtn));
+    drawButton(w, backBtn, GetTranslation(TR_OPTIONS_BACK), false, mouseInRect(w, backBtn));
+    drawButton(w, startBtn, GetTranslation(TR_OPTIONS_START), true, mouseInRect(w, startBtn));
 
-    g_hint.setString("Click pe optiuni. ENTER Start. B inapoi. ESC meniu");
+    g_hint.setString(GetTranslation(TR_OPTIONS_HINT));
     g_hint.setPosition({ px + 40.f, py + 540.f - 30.f });
     w.draw(g_hint);
 }
@@ -1463,6 +1477,7 @@ static void drawGameOver(sf::RenderWindow& w) {
     float H = (float)sz.y;
 
     sf::RectangleShape dim({ W, H });
+    dim.setPosition({ 0.f, 0.f });
     dim.setFillColor(sf::Color(0, 0, 0, 150));
     w.draw(dim);
 
@@ -1483,19 +1498,23 @@ static void drawGameOver(sf::RenderWindow& w) {
     float bx = banner.getPosition().x;
     float by = banner.getPosition().y;
 
-    g_overTitle.setString("FINAL");
+    g_overTitle.setString(GetTranslation(TR_GAMEOVER_TITLE));
     g_overTitle.setPosition({ bx + 40.f, by + 25.f });
     w.draw(g_overTitle);
 
     char winnerBuf[256];
+    const char* whiteLabel = GetTranslation(TR_HUD_WHITE);
+    const char* blackLabel = GetTranslation(TR_HUD_BLACK);
     if (g_winner == 1) {
-        std::snprintf(winnerBuf, sizeof(winnerBuf), "Castigator: %s (ALB)", g_nameWhite);
+        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)", 
+            GetTranslation(TR_GAMEOVER_WINNER), g_nameWhite, whiteLabel);
     }
     else if (g_winner == 2) {
-        std::snprintf(winnerBuf, sizeof(winnerBuf), "Castigator: %s (NEGRU)", g_nameBlack);
+        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)", 
+            GetTranslation(TR_GAMEOVER_WINNER), g_nameBlack, blackLabel);
     }
     else {
-        std::snprintf(winnerBuf, sizeof(winnerBuf), "REZULTAT: REMIZA");
+        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s", GetTranslation(TR_GAMEOVER_DRAW));
     }
 
     g_overWinner.setString(winnerBuf);
@@ -1504,13 +1523,13 @@ static void drawGameOver(sf::RenderWindow& w) {
 
     if (g_overReason[0] != 0) {
         char rbuf[128];
-        std::snprintf(rbuf, sizeof(rbuf), "Motiv: %s", g_overReason);
+        std::snprintf(rbuf, sizeof(rbuf), "%s %s", GetTranslation(TR_GAMEOVER_REASON), g_overReason);
         g_overReasonText.setString(rbuf);
         g_overReasonText.setPosition({ bx + 40.f, by + 175.f });
         w.draw(g_overReasonText);
     }
 
-    g_overHint.setString("R = rematch | ENTER = setup | ESC = meniu");
+    g_overHint.setString(GetTranslation(TR_GAMEOVER_HINT));
     g_overHint.setPosition({ bx + 40.f, by + 310.f });
     w.draw(g_overHint);
 }

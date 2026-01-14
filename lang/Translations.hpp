@@ -1,0 +1,110 @@
+#pragma once
+
+enum Language {
+    English,
+    Romanian
+};
+
+enum TranslationKey {
+    // Main Menu
+    TR_MENU_TITLE,
+    TR_MENU_PLAY,
+    TR_MENU_LEARN,
+    TR_MENU_LEADERBOARD,
+    TR_MENU_SETTINGS,
+    TR_MENU_EXIT,
+    
+    // Play Screen - Mode Selection
+    TR_MODE_SELECT_TITLE,
+    TR_MODE_PVP,
+    TR_MODE_PVC,
+    TR_MODE_CVC,
+    TR_MODE_HINT,
+    
+    // Play Screen - Name Entry
+    TR_NAME_ENTRY_TITLE,
+    TR_NAME_WHITE,
+    TR_NAME_BLACK,
+    TR_NAME_HINT,
+    
+    // Play Screen - Options
+    TR_OPTIONS_TITLE,
+    TR_OPTIONS_TIMER,
+    TR_OPTIONS_TIMER_ON,
+    TR_OPTIONS_TIMER_OFF,
+    TR_OPTIONS_COMPUTER_WHITE,
+    TR_OPTIONS_COMPUTER_WHITE_EASY,
+    TR_OPTIONS_COMPUTER_WHITE_HARD,
+    TR_OPTIONS_COMPUTER_BLACK,
+    TR_OPTIONS_COMPUTER_BLACK_EASY,
+    TR_OPTIONS_COMPUTER_BLACK_HARD,
+    TR_OPTIONS_BACK,
+    TR_OPTIONS_START,
+    TR_OPTIONS_HINT,
+    
+    // Play Screen - Game HUD
+    TR_HUD_TURN,
+    TR_HUD_WHITE,
+    TR_HUD_BLACK,
+    TR_HUD_PIECES,
+    TR_HUD_CAPTURES,
+    
+    // Play Screen - Game Over
+    TR_GAMEOVER_TITLE,
+    TR_GAMEOVER_WINNER,
+    TR_GAMEOVER_DRAW,
+    TR_GAMEOVER_REASON,
+    TR_GAMEOVER_HINT,
+    TR_GAMEOVER_TIMEOUT,
+    
+    // Settings
+    TR_SETTINGS_BACK,
+    TR_SETTINGS_FPS,
+    TR_SETTINGS_SOUND,
+    TR_SETTINGS_MUSIC,
+    TR_SETTINGS_RESET,
+    TR_SETTINGS_LANGUAGE,
+    TR_SETTINGS_LANGUAGE_EN,
+    TR_SETTINGS_LANGUAGE_RO,
+    TR_SETTINGS_ON,
+    TR_SETTINGS_OFF,
+    
+    // Leaderboard
+    TR_LEADERBOARD_TITLE,
+    TR_LEADERBOARD_BACK,
+    
+    // Themes
+    TR_THEMES_BACK,
+    TR_THEMES_SELECT,
+    TR_THEMES_CONFIRM,
+    TR_THEMES_DEFAULT,
+    TR_THEMES_DEFAULT_DARK,
+    TR_THEMES_BW,
+    TR_THEMES_CUSTOM,
+    
+    // Learn
+    TR_LEARN_BACK,
+    TR_LEARN_PAGE1_INTRO,
+    TR_LEARN_PAGE1_OBJECTIVE_TITLE,
+    TR_LEARN_PAGE1_OBJECTIVE,
+    TR_LEARN_PAGE1_SETUP_TITLE,
+    TR_LEARN_PAGE1_SETUP,
+    TR_LEARN_PAGE2_TITLE,
+    TR_LEARN_PAGE2_MOVEMENT,
+    TR_LEARN_PAGE3_TITLE,
+    TR_LEARN_PAGE3_CAPTURE,
+    TR_LEARN_PAGE4_TITLE,
+    TR_LEARN_PAGE4_RULES,
+    TR_LEARN_PAGE5_TITLE,
+    TR_LEARN_PAGE5_END,
+    TR_LEARN_PAGE5_VICTORY,
+    TR_LEARN_PAGE5_VICTORY_DESC,
+    TR_LEARN_PAGE5_SCORE,
+    TR_LEARN_PAGE5_SCORE_DESC
+};
+
+extern Language g_currentLanguage;
+
+void InitTranslations();
+void SetTranslationLanguage(Language lang);
+const char* GetTranslation(TranslationKey key);

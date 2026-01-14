@@ -7,7 +7,8 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
-#include "../Profile/playerData.hpp" 
+#include "../Profile/playerData.hpp"
+#include "../lang/Translations.hpp" 
 
 struct SettingsMenu {
     AudioMenu audio;
@@ -28,6 +29,9 @@ struct SettingsMenu {
     sf::RectangleShape musicBtn, musicNR;
     sf::Text musicTxt, musicNRTxt;
 
+    sf::RectangleShape languageBtn, languageNR;
+    sf::Text languageTxt, languageNRTxt;
+
     sf::RectangleShape resetBtn;
     sf::Text resetTxt;
     sf::Text backTxt;
@@ -46,6 +50,7 @@ struct SettingsMenu {
         fpsTxt(font), fpsNRTxt(font),
         soundTxt(font), soundNRTxt(font),
         musicTxt(font), musicNRTxt(font),
+        languageTxt(font), languageNRTxt(font),
         resetTxt(font)
     {
         if (!font.openFromFile("Themes/Kanit-Medium.ttf")) {
@@ -90,6 +95,11 @@ struct SettingsMenu {
         button(musicBtn, musicTxt, "Music", sf::Vector2f(btnWidthLabel, btnHeight), sf::Vector2f(startX, row3Y), sf::Vector2f(0.f, 0.f));
         button(musicNR, musicNRTxt, musicOn ? "ON" : "OFF", sf::Vector2f(btnWidthValue, btnHeight), sf::Vector2f(rightX, row3Y), sf::Vector2f(btnWidthValue, 0.f));
 
+        // Language
+        float row4Y = row3Y + btnHeight + gap;
+        button(languageBtn, languageTxt, "Language", sf::Vector2f(btnWidthLabel, btnHeight), sf::Vector2f(startX, row4Y), sf::Vector2f(0.f, 0.f));
+        button(languageNR, languageNRTxt, language == "RO" ? "RO" : "EN", sf::Vector2f(btnWidthValue, btnHeight), sf::Vector2f(rightX, row4Y), sf::Vector2f(btnWidthValue, 0.f));
+
         // Reset
         float divBottomY = divBounds.position.y + divBounds.size.y;
         float divCenterX = divBounds.position.x + divBounds.size.x / 2.0f;
@@ -99,6 +109,7 @@ struct SettingsMenu {
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
         updateColors(); // Initial color set
+        updateTexts(); // Initial text set
     }
 
     void div(sf::RectangleShape& shape, sf::Vector2f size, sf::Vector2f position, sf::Vector2f origin) {
@@ -166,8 +177,31 @@ struct SettingsMenu {
 
         musicNRTxt.setFillColor(txtColor);
 
+        languageBtn.setFillColor(btnColor);
+        languageTxt.setFillColor(txtColor);
+        languageNRTxt.setFillColor(txtColor);
+        languageNR.setFillColor(sf::Color(100, 150, 200));
+
         resetBtn.setFillColor(btnColor);
         resetTxt.setFillColor(txtColor);
+    }
+
+    void updateTexts() {
+        backTxt.setString(GetTranslation(TR_SETTINGS_BACK));
+        fpsTxt.setString(GetTranslation(TR_SETTINGS_FPS));
+        soundTxt.setString(GetTranslation(TR_SETTINGS_SOUND));
+        musicTxt.setString(GetTranslation(TR_SETTINGS_MUSIC));
+        languageTxt.setString(GetTranslation(TR_SETTINGS_LANGUAGE));
+        resetTxt.setString(GetTranslation(TR_SETTINGS_RESET));
+        
+        soundNRTxt.setString(soundOn ? GetTranslation(TR_SETTINGS_ON) : GetTranslation(TR_SETTINGS_OFF));
+        musicNRTxt.setString(musicOn ? GetTranslation(TR_SETTINGS_ON) : GetTranslation(TR_SETTINGS_OFF));
+        languageNRTxt.setString(language == "RO" ? "RO" : "EN");
+        
+        updateTextCenter(soundNR, soundNRTxt);
+        updateTextCenter(musicNR, musicNRTxt);
+        updateTextCenter(languageNR, languageNRTxt);
+        updateTextCenter(resetBtn, resetTxt);
     }
 
     void saveAndSync() {
@@ -201,7 +235,7 @@ struct SettingsMenu {
                 }
                 else if (soundNR.getGlobalBounds().contains(mousePosF)) {
                     soundOn = !soundOn;
-                    soundNRTxt.setString(soundOn ? "ON" : "OFF");
+                    soundNRTxt.setString(soundOn ? GetTranslation(TR_SETTINGS_ON) : GetTranslation(TR_SETTINGS_OFF));
                     updateTextCenter(soundNR, soundNRTxt);
 
                     saveAndSync();
@@ -209,7 +243,7 @@ struct SettingsMenu {
                 }
                 else if (musicNR.getGlobalBounds().contains(mousePosF)) {
                     musicOn = !musicOn;
-                    musicNRTxt.setString(musicOn ? "ON" : "OFF");
+                    musicNRTxt.setString(musicOn ? GetTranslation(TR_SETTINGS_ON) : GetTranslation(TR_SETTINGS_OFF));
                     updateTextCenter(musicNR, musicNRTxt);
 
                     // Music Control Logic
@@ -223,6 +257,21 @@ struct SettingsMenu {
                     saveAndSync();
                     audio.playClick();
                 }
+                else if (languageNR.getGlobalBounds().contains(mousePosF)) {
+                    if (language == "EN") {
+                        language = "RO";
+                        SetTranslationLanguage(Romanian);
+                    } else {
+                        language = "EN";
+                        SetTranslationLanguage(English);
+                    }
+                    languageNRTxt.setString(language == "RO" ? "RO" : "EN");
+                    updateTextCenter(languageNR, languageNRTxt);
+                    updateTexts(); // Update all texts with new language
+                    
+                    saveAndSync();
+                    audio.playClick();
+                }
                 else if (resetBtn.getGlobalBounds().contains(mousePosF)) {
                     fpsIndex = 0;
                     window.setFramerateLimit(framerates[fpsIndex]);
@@ -230,13 +279,19 @@ struct SettingsMenu {
                     updateTextCenter(fpsNR, fpsNRTxt);
 
                     soundOn = true;
-                    soundNRTxt.setString("ON");
+                    soundNRTxt.setString(GetTranslation(TR_SETTINGS_ON));
                     updateTextCenter(soundNR, soundNRTxt);
 
                     musicOn = true;
-                    musicNRTxt.setString("ON");
+                    musicNRTxt.setString(GetTranslation(TR_SETTINGS_ON));
                     updateTextCenter(musicNR, musicNRTxt);
                     if (bgMusic.getStatus() != sf::Music::Status::Playing) bgMusic.play();
+                    
+                    language = "EN";
+                    SetTranslationLanguage(English);
+                    languageNRTxt.setString("EN");
+                    updateTextCenter(languageNR, languageNRTxt);
+                    updateTexts();
 
                     saveAndSync();
                     audio.playClick();
@@ -246,8 +301,9 @@ struct SettingsMenu {
     }
 
     void draw(sf::RenderWindow& window) {
-        // ALWAYS UPDATE COLORS BEFORE DRAWING
+        // ALWAYS UPDATE COLORS AND TEXTS BEFORE DRAWING
         updateColors();
+        updateTexts();
 
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
@@ -266,6 +322,13 @@ struct SettingsMenu {
         if (musicNR.getGlobalBounds().contains(mousePosF)) isHovering = true;
         musicNR.setFillColor(musicOn ? sf::Color::Green : sf::Color::Red);
 
+        if (languageNR.getGlobalBounds().contains(mousePosF)) {
+            languageNR.setFillColor(sf::Color(120, 170, 220));
+            isHovering = true;
+        } else {
+            languageNR.setFillColor(sf::Color(100, 150, 200));
+        }
+
         if (resetBtn.getGlobalBounds().contains(mousePosF)) { resetBtn.setFillColor(themes[0].color_HoverButton); isHovering = true; }
         else resetBtn.setFillColor(themes[0].color_buttons);
 
@@ -280,6 +343,8 @@ struct SettingsMenu {
         window.draw(soundNR); window.draw(soundNRTxt);
         window.draw(musicBtn); window.draw(musicTxt);
         window.draw(musicNR); window.draw(musicNRTxt);
+        window.draw(languageBtn); window.draw(languageTxt);
+        window.draw(languageNR); window.draw(languageNRTxt);
         window.draw(resetBtn); window.draw(resetTxt);
     }
 };

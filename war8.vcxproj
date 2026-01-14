@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AI\AIPlayer.cpp" />
+    <ClCompile Include="lang\Translations.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PlayScreen\PlayScreen.cpp" />
     <ClCompile Include="Themes\themesRead.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="Stats\stats.hpp" />
     <ClInclude Include="Themes\Themes.hpp" />
     <ClInclude Include="Themes\themesRead.h" />
+    <ClInclude Include="lang\Translations.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

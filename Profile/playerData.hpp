@@ -39,6 +39,9 @@ inline void LoadPlayerData() {
         else if (key == "soundeffects:") {
             soundEffects = value;
         }
+        else if (key == "language:") {
+            language = value;
+        }
     }
     fin.close();
     std::cout << "[INFO] Player data loaded: " << themeAdress[0] << std::endl;
@@ -76,6 +79,7 @@ inline void SavePlayerData() {
     foutProfile << "fps: " << fps << std::endl;
     foutProfile << "music: " << Music << std::endl;
     foutProfile << "soundeffects: " << soundEffects << std::endl;
+    foutProfile << "language: " << language << std::endl;
 
     foutProfile.close();
 

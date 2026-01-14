@@ -9,6 +9,7 @@
 #include "../Themes/themesRead.h"
 #include "../globalVar.hpp"
 #include "../SoundEffects/SoundEffects.hpp"
+#include "../lang/Translations.hpp"
 
 struct PlayerEntry {
     std::string name;
@@ -46,7 +47,7 @@ struct LeaderboardMenu {
         cursorHand = sf::Cursor::createFromSystem(sf::Cursor::Type::Hand);
         cursorArrow = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow);
 
-        button(back, backTxt, "Back", sf::Vector2f(543.f, 108.f), sf::Vector2f(0.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
+        button(back, backTxt, GetTranslation(TR_LEADERBOARD_BACK), sf::Vector2f(543.f, 108.f), sf::Vector2f(0.f, SCREEN_H), sf::Vector2f(0.f, 108.f));
 
         float tableWidth = 700.f;
         float headerHeight = 80.f;
@@ -70,7 +71,7 @@ struct LeaderboardMenu {
         rightColShape.setPosition(sf::Vector2f(startX + nameColWidth, startY + headerHeight));
 
         titleTxt.setFont(font);
-        titleTxt.setString("Top Wins");
+        titleTxt.setString(GetTranslation(TR_LEADERBOARD_TITLE));
         titleTxt.setCharacterSize(40);
 
         sf::FloatRect tr = titleTxt.getLocalBounds();
@@ -185,6 +186,24 @@ struct LeaderboardMenu {
         }
     }
 
+    void updateTexts() {
+        backTxt.setString(GetTranslation(TR_LEADERBOARD_BACK));
+        titleTxt.setString(GetTranslation(TR_LEADERBOARD_TITLE));
+        
+        sf::FloatRect tr = titleTxt.getLocalBounds();
+        titleTxt.setOrigin(sf::Vector2f(tr.position.x + tr.size.x / 2.0f, tr.position.y + tr.size.y / 2.0f));
+        
+        sf::FloatRect btnBounds = back.getGlobalBounds();
+        backTxt.setOrigin(sf::Vector2f(
+            backTxt.getLocalBounds().position.x + backTxt.getLocalBounds().size.x / 2.0f,
+            backTxt.getLocalBounds().position.y + backTxt.getLocalBounds().size.y / 2.0f
+        ));
+        backTxt.setPosition(sf::Vector2f(
+            btnBounds.position.x + btnBounds.size.x / 2.0f,
+            btnBounds.position.y + btnBounds.size.y / 2.0f
+        ));
+    }
+
     void handleInput(const sf::Event& event, sf::RenderWindow& window) {
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
@@ -202,6 +221,7 @@ struct LeaderboardMenu {
 
     void draw(sf::RenderWindow& window) {
         updateColors();
+        updateTexts();
 
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosF = window.mapPixelToCoords(mousePos);
