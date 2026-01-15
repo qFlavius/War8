@@ -131,7 +131,8 @@ struct GameMenu {
 
             if (buttons[i].getGlobalBounds().contains(mousePosF)) {
                 buttons[i].setFillColor(themes[0].color_HoverButton);
-                isHovering = true;
+                if (i == 0) isHovering = false;
+                else isHovering = true;
             }
             else {
                 buttons[i].setFillColor(themes[0].color_buttons);
@@ -168,9 +169,10 @@ struct GameMenu {
             GetTranslation(TR_MENU_PLAY), 
             GetTranslation(TR_MENU_LEARN), 
             GetTranslation(TR_MENU_LEADERBOARD),
-            "", "", 
+            "",
             GetTranslation(TR_MENU_THEME),
-            GetTranslation(TR_MENU_SETTINGS)
+            GetTranslation(TR_MENU_SETTINGS),
+            GetTranslation(TR_MENU_EXIT)
         };
         
         while (texts.size() < labels.size()) {
