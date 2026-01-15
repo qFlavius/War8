@@ -566,7 +566,23 @@ struct GameThemes {
                         audio.playClick();
                         themes[0] = themes[4];
                         themeAdress[0] = themeAdress[4];
+
+                        // UPDATE CUSTOM THEME LABEL
                         themeLabel_4.setFillColor(themes[4].color_bg);
+                        square1_4.setFillColor(themes[4].color_BoardSquare1);
+                        square2_4.setFillColor(themes[4].color_BoardSquare2);
+                        square3_4.setFillColor(themes[4].color_BoardSquare2);
+                        square4_4.setFillColor(themes[4].color_BoardSquare1);
+
+                        peace1_4.setFillColor(themes[4].color_peace1);
+                        peace1_4.setOutlineColor(themes[4].color_peaceOutline1);
+
+                        peace2_4.setFillColor(themes[4].color_peace2);
+                        peace2_4.setOutlineColor(themes[4].color_peaceOutline2);
+
+                        selectButton1_4.setFillColor(themes[4].color_HoverButton);
+                        themeName_4.setFillColor(themes[4].color_text);
+
                         SavePlayerData();
                         popUp = false;
                         return;

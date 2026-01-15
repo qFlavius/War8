@@ -3,4 +3,4 @@ Andrei 3
 Computer 99
 George 20
 Mihai 12
-stefan 2
+stefan 3

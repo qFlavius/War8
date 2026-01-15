@@ -11,6 +11,7 @@ enum TranslationKey {
     TR_MENU_PLAY,
     TR_MENU_LEARN,
     TR_MENU_LEADERBOARD,
+    TR_MENU_THEME,
     TR_MENU_SETTINGS,
     TR_MENU_EXIT,
     

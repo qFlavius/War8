@@ -18,6 +18,7 @@ const char* GetTranslation(TranslationKey key) {
             case TR_MENU_PLAY: return "Play";
             case TR_MENU_LEARN: return "Learn";
             case TR_MENU_LEADERBOARD: return "Leaderboard";
+            case TR_MENU_THEME: return "Themes";
             case TR_MENU_SETTINGS: return "Settings";
             case TR_MENU_EXIT: return "Exit";
             
@@ -118,6 +119,7 @@ const char* GetTranslation(TranslationKey key) {
             case TR_MENU_PLAY: return "Joc";
             case TR_MENU_LEARN: return "Invatare";
             case TR_MENU_LEADERBOARD: return "Clasament";
+            case TR_MENU_THEME: return "Teme";
             case TR_MENU_SETTINGS: return "Setari";
             case TR_MENU_EXIT: return "Iesire";
             
@@ -167,7 +169,7 @@ const char* GetTranslation(TranslationKey key) {
             // Settings
             case TR_SETTINGS_BACK: return "Inapoi";
             case TR_SETTINGS_FPS: return "FPS";
-            case TR_SETTINGS_SOUND: return "Efecte sonore";
+            case TR_SETTINGS_SOUND: return "Efecte Sonore";
             case TR_SETTINGS_MUSIC: return "Muzica";
             case TR_SETTINGS_RESET: return "Resetare";
             case TR_SETTINGS_LANGUAGE: return "Limba";

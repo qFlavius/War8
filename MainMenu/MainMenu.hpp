@@ -169,7 +169,7 @@ struct GameMenu {
             GetTranslation(TR_MENU_LEARN), 
             GetTranslation(TR_MENU_LEADERBOARD),
             "", "", 
-            "Themes", 
+            GetTranslation(TR_MENU_THEME),
             GetTranslation(TR_MENU_SETTINGS)
         };
         

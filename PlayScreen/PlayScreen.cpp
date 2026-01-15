@@ -1139,8 +1139,8 @@ static void drawHUD(sf::RenderWindow& w) {
 
         char buf[256];
         std::snprintf(buf, sizeof(buf), "%s\n%s\n%s %d\n%s %d",
-            GetTranslation(TR_HUD_WHITE), g_nameWhite, 
-            GetTranslation(TR_HUD_PIECES), wPieces, 
+            GetTranslation(TR_HUD_WHITE), g_nameWhite,
+            GetTranslation(TR_HUD_PIECES), wPieces,
             GetTranslation(TR_HUD_CAPTURES), g_capturedByWhite);
         g_hudLeft.setString(buf);
         g_hudLeft.setPosition({ bg.getPosition().x + 16.f, bg.getPosition().y + 14.f });
@@ -1506,11 +1506,11 @@ static void drawGameOver(sf::RenderWindow& w) {
     const char* whiteLabel = GetTranslation(TR_HUD_WHITE);
     const char* blackLabel = GetTranslation(TR_HUD_BLACK);
     if (g_winner == 1) {
-        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)", 
+        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)",
             GetTranslation(TR_GAMEOVER_WINNER), g_nameWhite, whiteLabel);
     }
     else if (g_winner == 2) {
-        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)", 
+        std::snprintf(winnerBuf, sizeof(winnerBuf), "%s: %s (%s)",
             GetTranslation(TR_GAMEOVER_WINNER), g_nameBlack, blackLabel);
     }
     else {
@@ -1627,9 +1627,11 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
     if (g_phase == PHASE_NAMES) {
         if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
             if (k->code == sf::Keyboard::Key::B) {
-                audio.playClick();
-                g_phase = PHASE_MODE;
-                return;
+                if (g_activeName == -1) {
+                    audio.playClick();
+                    g_phase = PHASE_MODE;
+                    return;
+                }
             }
             if (k->code == sf::Keyboard::Key::Tab) {
                 audio.playClick();
@@ -1698,6 +1700,34 @@ void Play_HandleEvent(const sf::Event& e, sf::RenderWindow& w) {
                 }
             }
             return;
+        }
+
+        if (const auto* mb = e.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mb->button != sf::Mouse::Button::Left) return;
+            // audio.playClick(); // Optional, only if interaction occurs
+
+            auto sz = w.getSize();
+            float W = (float)sz.x;
+            float H = (float)sz.y;
+            float px = (W - 820.f) / 2.f;
+            float py = (H - 440.f) / 2.f;
+
+            sf::FloatRect box1({ px + 40.f, py + 155.f }, { 740.f, 60.f });
+            sf::FloatRect box2({ px + 40.f, py + 265.f }, { 740.f, 60.f });
+
+            bool clickedBox1 = mouseInRect(w, box1);
+            bool clickedBox2 = mouseInRect(w, box2);
+
+            if (!g_isComputerWhite && clickedBox1) {
+                g_activeName = 0;
+            }
+            else if (!g_isComputerBlack && clickedBox2) {
+                g_activeName = 1;
+            }
+            else {
+                // Clicked outside -> Deselect
+                g_activeName = -1;
+            }
         }
 
         return;
